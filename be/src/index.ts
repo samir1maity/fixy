@@ -1,9 +1,19 @@
 import express from 'express'
-import { scrapeData } from './configs/cheerio';
+import { scrapeData } from './configs/cheerio.js';
+import { getEmbedding } from './configs/embeddings.js';
 
 const app = express()
 
-scrapeData("https://github.com/samir1maity/fixy");
+
+const scrape = async () => {
+    const data = await scrapeData("https://100xdevs.com/");
+    console.log(data);
+}
+scrape();
+
+
+const embedding = await getEmbedding("Hello, world!");
+console.log(embedding);
 
 
 app.listen(3000,()=>{
