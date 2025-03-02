@@ -5,10 +5,13 @@ import { getEmbedding } from "./configs/embeddings.js";
 const app = express();
 
 const scrape = async () => {
-  const data = await scrapeGenericWebsite("https://www.piyushgarg.dev/");
+  const data = await scrapeGenericWebsite('https://harkirat.classx.co.in');
   console.log(data);
-  const chunks = chunkContent(data.content, data.links);
-  console.log(chunks);
+  //@ts-ignore
+    data.links.internal.map( async (link)=>{
+        const temp = await scrapeGenericWebsite(`https://harkirat.classx.co.in/new-courses${link}`);
+        console.log(temp);
+    })
 };
 scrape();
 
