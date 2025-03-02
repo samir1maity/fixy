@@ -1,22 +1,18 @@
 import express from "express";
-import { chunkContent, scrapeGenericWebsite } from "./configs/contentProcessing.js";
-import { getEmbedding } from "./configs/embeddings.js";
+import "dotenv/config";
+import { scrapeGenericWebsite } from "./services/website.service.js";
+import { chunkContent } from "./services/contentProcessor.service.js";
 
 const app = express();
+app.use(express.json());
 
 const scrape = async () => {
-  const data = await scrapeGenericWebsite('https://harkirat.classx.co.in');
+  const data = await scrapeGenericWebsite("https://www.piyushgarg.dev");
   console.log(data);
-  //@ts-ignore
-    data.links.internal.map( async (link)=>{
-        const temp = await scrapeGenericWebsite(`https://harkirat.classx.co.in/new-courses${link}`);
-        console.log(temp);
-    })
+//   const chunks = chunkContent(data.content, "hi hello");
+//   console.log(chunks);
 };
 scrape();
-
-const embedding = await getEmbedding("Hello, world!");
-console.log(embedding);
 
 app.listen(3000, () => {
   console.log("server started at port 3000 ");

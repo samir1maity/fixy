@@ -5,82 +5,84 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [uuid_ossp(map: "uuid-ossp", schema: "extensions"), vector(schema: "extensions")]
 }
 
 model Website {
-  id              Int     @id @default(autoincrement())
-  customerId      String  
-  domain          String  
-  name           String?  
-  createdAt       DateTime @default(now())
-  lastCrawledAt   DateTime?  
-  status         String  @default("pending")
-  maxPages       Int      @default(100)
+  id            Int       @id @default(autoincrement())
+  customerId    String
+  domain        String
+  name          String?
+  createdAt     DateTime  @default(now())
+  lastCrawledAt DateTime?
+  status        String    @default("pending")
+  maxPages      Int?      @default(100)
 
-  Pages           Page[]  
+  Pages            Page[]
   ChatInteractions ChatInteraction[]
 
   @@unique([customerId, domain])
 }
 
 model Page {
-  id              Int     @id @default(autoincrement())
-  websiteId       Int  
-  url             String @unique
-  title           String?  
-  lastCrawledAt   DateTime?  
-  contentHash     String?  // Hash for detecting changes
-  status         String  @default("pending")
+  id            String       @id @default(uuid())
+  websiteId     Int
+  url           String    @unique
+  title         String?
+  lastCrawledAt DateTime?
+  contentHash   String? 
+  status        String    @default("pending")
 
-  Website         Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
-  Chunks          Chunk[]
+  Website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  Chunks  Chunk[]
 
   @@unique([websiteId, url])
 }
 
 model Chunk {
-  id              Int     @id @default(autoincrement())
-  pageId          Int  
-  chunkIndex      Int  
-  text            String  
-  tokenCount      Int?  
-  sectionTitle    String?  
-  createdAt       DateTime @default(now())
+  id           String      @id @default(uuid())
+  pageId       String
+  chunkIndex   Int
+  text         String
+  tokenCount   Int?
+  sectionTitle String?
+  createdAt    DateTime @default(now())
 
-  Page            Page @relation(fields: [pageId], references: [id], onDelete: Cascade)
-  Embeddings      Embedding[]
+  Page       Page        @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  Embeddings Embedding[]
 
   @@unique([pageId, chunkIndex])
 }
 
 model Embedding {
-  id              Int     @id @default(autoincrement())
-  chunkId         Int  
-  modelName       String  // e.g., 'all-MiniLM-L6-v2'
-  dimensions      Int  
-  embedding       Bytes  // Use Bytes to store vector data
+  id         String                         @id @default(uuid())
+  chunkId    String
+  modelName  String?
+  dimensions Int
+  embedding  Unsupported("vector(384)")?
 
-  createdAt       DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  Chunk           Chunk @relation(fields: [chunkId], references: [id], onDelete: Cascade)
+  Chunk Chunk @relation(fields: [chunkId], references: [id], onDelete: Cascade)
 
   @@unique([chunkId, modelName])
 }
 
 model ChatInteraction {
-  id              Int     @id @default(autoincrement())
-  websiteId       Int  
-  sessionId       String?  
-  query           String  
-  response        String  
-  chunksUsed      Json  // Stores chunk references in JSON format
-  createdAt       DateTime @default(now())
+  id         String      @id @default(uuid())
+  websiteId  Int
+  sessionId  String?
+  query      String
+  response   String
+  chunksUsed Json
+  createdAt  DateTime @default(now())
 
-  Website         Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  Website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
 }

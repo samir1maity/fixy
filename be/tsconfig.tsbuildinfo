@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/configs/contentProcessing.ts","./src/configs/embeddings.ts"],"version":"5.8.2"}
+{"root":["./src/index.ts","./src/configs/db.ts","./src/controllers/content.controller.ts","./src/routes/content.route.ts","./src/services/chat.service.ts","./src/services/contentProcessor.service.ts","./src/services/embedding.service.ts","./src/services/website.service.ts"],"version":"5.8.2"}
