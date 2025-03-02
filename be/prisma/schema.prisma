@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Website {
+  id              Int     @id @default(autoincrement())
+  customerId      String  
+  domain          String  
+  name           String?  
+  createdAt       DateTime @default(now())
+  lastCrawledAt   DateTime?  
+  status         String  @default("pending")
+  maxPages       Int      @default(100)
+
+  Pages           Page[]  
+  ChatInteractions ChatInteraction[]
+
+  @@unique([customerId, domain])
+}
+
+model Page {
+  id              Int     @id @default(autoincrement())
+  websiteId       Int  
+  url             String @unique
+  title           String?  
+  lastCrawledAt   DateTime?  
+  contentHash     String?  // Hash for detecting changes
+  status         String  @default("pending")
+
+  Website         Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  Chunks          Chunk[]
+
+  @@unique([websiteId, url])
+}
+
+model Chunk {
+  id              Int     @id @default(autoincrement())
+  pageId          Int  
+  chunkIndex      Int  
+  text            String  
+  tokenCount      Int?  
+  sectionTitle    String?  
+  createdAt       DateTime @default(now())
+
+  Page            Page @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  Embeddings      Embedding[]
+
+  @@unique([pageId, chunkIndex])
+}
+
+model Embedding {
+  id              Int     @id @default(autoincrement())
+  chunkId         Int  
+  modelName       String  // e.g., 'all-MiniLM-L6-v2'
+  dimensions      Int  
+  embedding       Bytes  // Use Bytes to store vector data
+
+  createdAt       DateTime @default(now())
+
+  Chunk           Chunk @relation(fields: [chunkId], references: [id], onDelete: Cascade)
+
+  @@unique([chunkId, modelName])
+}
+
+model ChatInteraction {
+  id              Int     @id @default(autoincrement())
+  websiteId       Int  
+  sessionId       String?  
+  query           String  
+  response        String  
+  chunksUsed      Json  // Stores chunk references in JSON format
+  createdAt       DateTime @default(now())
+
+  Website         Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+}
