@@ -1,6 +1,6 @@
 import { pipeline } from "@xenova/transformers";
+import { prisma } from "../configs/db.js";
 
-// Remove top-level await and use a function instead
 let embeddingModel: any = null;
 
 const initializeModel = async () => {
@@ -13,12 +13,42 @@ const initializeModel = async () => {
   return embeddingModel;
 };
 
-export const getEmbedding = async (text: string) => {
+ const getEmbedding = async (text: string) => {
   const model = await initializeModel();
-  const output1 = await model('text', {
+  const output1 = await model(text, {
     pooling: "mean",
     normalize: true,
   });
 
   return Array.from(output1.data);
 };
+
+export async function storeEmbedding(chunkId: string, embedding: any): Promise<void> {
+
+}
+
+export async function processUnembeddedChunks(batchSize: number = 10): Promise<number> {
+  const chunks = await prisma.chunk.findMany({
+    where: {
+      Embeddings: {
+        none: {}
+      }
+    },
+    take: batchSize
+  });
+  
+  let processedCount = 0;
+  
+  for (const chunk of chunks) {
+    try {
+      const embedding = await getEmbedding(chunk.text);
+      await storeEmbedding(chunk.id, embedding);
+      processedCount++;
+    } catch (error) {
+      console.error(`Error processing chunk ${chunk.id}:`, error);
+    }
+  }
+  
+  return processedCount;
+}
+
