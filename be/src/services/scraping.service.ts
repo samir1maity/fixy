@@ -1,5 +1,7 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
+import { prisma } from "../configs/db.js";
+import { chunkContent } from "./contentProcessor.service.js";
 
 export async function scrapeGenericWebsite(url: string) {
   try {
@@ -101,4 +103,158 @@ export async function scrapeGenericWebsite(url: string) {
       links: [],
     };
   }
+}
+
+// Helper function to normalize URLs
+function normalizeUrl(url: string): string {
+  try {
+    const urlObj = new URL(url);
+    // Remove trailing slash
+    return urlObj.href.replace(/\/$/, '');
+  } catch (e) {
+    return url;
+  }
+}
+
+// Helper function to extract domain
+function extractDomain(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch (e) {
+    return '';
+  }
+}
+
+// Helper function to process internal links
+function processInternalLinks(
+  internalLinks: string[], 
+  baseUrl: string, 
+  rootDomain: string
+): string[] {
+  const processedLinks: string[] = [];
+  
+  internalLinks.forEach(link => {
+    try {
+      // Skip anchor links, javascript, mailto, etc.
+      if (link.startsWith('#') || 
+          link.startsWith('javascript:') || 
+          link.startsWith('mailto:') ||
+          link.startsWith('tel:')) {
+        return;
+      }
+      
+      // Resolve relative URL
+      const fullUrl = new URL(link, baseUrl).toString();
+      const linkDomain = extractDomain(fullUrl);
+      
+      // Only include links from the same domain
+      if (linkDomain === rootDomain && !fullUrl.includes('#')) {
+        processedLinks.push(normalizeUrl(fullUrl));
+      }
+    } catch (e) {
+      // Invalid URL, skip
+    }
+  });
+  
+  return processedLinks;
+}
+
+export async function scrapeWebsiteRecursively(
+  rootUrl: string, 
+  websiteId: number,
+  maxDepth: number = 3, 
+  maxPages: number = 100
+): Promise<void> {
+  const visitedUrls = new Set<string>();
+  const urlQueue: Array<{url: string, depth: number}> = [];
+  
+  // Normalize and add root URL to queue
+  const normalizedRootUrl = normalizeUrl(rootUrl);
+  const rootDomain = extractDomain(normalizedRootUrl);
+  urlQueue.push({url: normalizedRootUrl, depth: 0});
+  
+  // Update website status to processing Todo: Implement this
+  await prisma.website.update({
+    where: { id: websiteId },
+    data: { status: 'processing' }
+  });
+  
+  let pagesProcessed = 0;
+  
+  // Process URLs until queue is empty or limits are reached
+  while (urlQueue.length > 0 && pagesProcessed < maxPages) {
+    const {url, depth} = urlQueue.shift()!;
+    
+    // Skip if already visited or exceeds max depth
+    if (visitedUrls.has(url) || depth > maxDepth) {
+      continue;
+    }
+    
+    console.log(`Scraping ${url} (depth: ${depth})`);
+    visitedUrls.add(url);
+    
+    try {
+      // Scrape the current page
+      const scrapedData = await scrapeGenericWebsite(url);
+      
+      if (scrapedData.content) {
+        // Store page in database Todo: Implement this
+        const page = await prisma.page.create({
+          data: {
+            websiteId,
+            url,
+            title: scrapedData.title
+          }
+        });
+        
+        // Process content into chunks
+        const chunks = chunkContent(scrapedData.content);
+
+        // Store chunks
+        for (let i = 0; i < chunks.length; i++) {
+          // Todo: Implement this
+          await prisma.chunk.create({
+            data: {
+              pageId: page.id,
+              chunkIndex: i,
+              text: chunks[i],
+              // tokenCount: estimateTokens(chunks[i]) // TODO: Implement this
+            }
+          });
+        }
+        
+        pagesProcessed++;
+      }
+      
+      // Process internal links
+      const internalLinks = processInternalLinks(
+        //@ts-ignore
+        scrapedData.links.internal, 
+        url, 
+        rootDomain
+      );
+      
+      // Add new internal links to queue
+      internalLinks.forEach(link => {
+        if (!visitedUrls.has(link)) {
+          urlQueue.push({url: link, depth: depth + 1});
+        }
+      });
+      
+      // Optional: Add a small delay to be polite to the server
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+    } catch (error) {
+      console.error(`Error processing ${url}:`, error);
+    }
+  }
+  
+  // Update website status to completed Todo: Implement this
+  await prisma.website.update({
+    where: { id: websiteId },
+    data: { 
+      status: 'completed',
+      lastCrawledAt: new Date()
+    }
+  });
 }

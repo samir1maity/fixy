@@ -1,6 +1,6 @@
 export function chunkContent(
     content: string,
-    metadata: any,
+    // metadata: any,
     chunkSize: number = 800
   ): any[] {
     const paragraphs = content.split(/\n\s*\n/);
@@ -14,7 +14,7 @@ export function chunkContent(
         currentChunk.length + paragraph.length > chunkSize &&
         currentChunk.length > 0
       ) {
-        chunks.push({ text: currentChunk.trim(), metadata: { ...metadata } });
+        chunks.push({ text: currentChunk.trim()});
         currentChunk = "";
       }
   
@@ -25,7 +25,7 @@ export function chunkContent(
         chunks.push(
           ...subChunks.map((sub) => ({
             text: sub.trim(),
-            metadata: { ...metadata },
+            // metadata: { ...metadata },
           }))
         );
       } else {
@@ -33,10 +33,9 @@ export function chunkContent(
       }
     }
   
-    if (currentChunk.trim().length > 0) {
-      chunks.push({ text: currentChunk.trim(), metadata: { ...metadata } });
-    }
+    // if (currentChunk.trim().length > 0) {
+    //   chunks.push({ text: currentChunk.trim(), metadata: { ...metadata } });
+    // }
   
     return chunks;
-  }
-  
+}

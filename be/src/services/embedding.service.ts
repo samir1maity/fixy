@@ -24,7 +24,17 @@ const initializeModel = async () => {
 };
 
 export async function storeEmbedding(chunkId: string, embedding: any): Promise<void> {
-
+  // Convert embedding array to Buffer for storage
+  // const vector = Buffer.from(new Float32Array(embedding).buffer);
+  
+  await prisma.embedding.create({
+    data: {
+      chunkId,
+      modelName: 'all-MiniLM-L6-v2',
+      dimensions: embedding.length,
+      vector
+    }
+  });
 }
 
 export async function processUnembeddedChunks(batchSize: number = 10): Promise<number> {
@@ -52,3 +62,25 @@ export async function processUnembeddedChunks(batchSize: number = 10): Promise<n
   return processedCount;
 }
 
+// export async function retrieveSimilarChunks(
+//   query: string, 
+//   websiteId: number, 
+//   limit: number = 5
+// ): Promise<any[]> {
+  // const queryEmbedding = await getEmbedding(query);
+  // const queryVector = Buffer.from(new Float32Array(queryEmbedding).buffer);
+  
+  // Using raw query for vector similarity search
+  // Note: This requires pgvector extension in PostgreSQL
+  // const results = await prisma.$queryRaw`
+  //   SELECT c.id, c.text, p.url, p.title
+  //   FROM "Chunk" c
+  //   JOIN "Page" p ON c."pageId" = p.id
+  //   JOIN "Embedding" e ON e."chunkId" = c.id
+  //   WHERE p."websiteId" = ${websiteId}
+  //   ORDER BY e.vector <-> ${queryVector}::vector
+  //   LIMIT ${limit}
+  // `;
+  
+  // return results;
+// }
