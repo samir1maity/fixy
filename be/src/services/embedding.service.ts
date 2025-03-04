@@ -1,5 +1,6 @@
 import { pipeline } from "@xenova/transformers";
 import { prisma } from "../configs/db.js";
+import crypto from "crypto";
 
 let embeddingModel: any = null;
 
@@ -13,7 +14,7 @@ const initializeModel = async () => {
   return embeddingModel;
 };
 
- const getEmbedding = async (text: string) => {
+ const getEmbedding = async (text: string): Promise<number[]> => {
   const model = await initializeModel();
   const output1 = await model(text, {
     pooling: "mean",
@@ -30,8 +31,7 @@ export function formatArrayAsVectorString (arr: number[]): string {
 export async function storeEmbedding(chunkId: string, embedding: any): Promise<void> {
   const vectorArrayLiteral = formatArrayAsVectorString(embedding);
 
-  // Generate a UUID for the id field if that's what your schema requires
-  const id = crypto.randomUUID(); // You'll need to import crypto
+  const id = crypto.randomUUID();
 
   const result = await prisma.$executeRaw`
       INSERT INTO "Embedding" (
@@ -76,25 +76,23 @@ export async function processUnembeddedChunks(batchSize: number = 10): Promise<n
   return processedCount;
 }
 
-// export async function retrieveSimilarChunks(
-//   query: string, 
-//   websiteId: number, 
-//   limit: number = 5
-// ): Promise<any[]> {
-  // const queryEmbedding = await getEmbedding(query);
-  // const queryVector = Buffer.from(new Float32Array(queryEmbedding).buffer);
+export async function retrieveSimilarChunks(
+  query: string, 
+  websiteId: number, 
+  limit: number = 3
+): Promise<any[]> {
+  const queryEmbedding = await getEmbedding(query);
+  const queryVector = formatArrayAsVectorString(queryEmbedding);
   
-  // Using raw query for vector similarity search
-  // Note: This requires pgvector extension in PostgreSQL
-  // const results = await prisma.$queryRaw`
-  //   SELECT c.id, c.text, p.url, p.title
-  //   FROM "Chunk" c
-  //   JOIN "Page" p ON c."pageId" = p.id
-  //   JOIN "Embedding" e ON e."chunkId" = c.id
-  //   WHERE p."websiteId" = ${websiteId}
-  //   ORDER BY e.vector <-> ${queryVector}::vector
-  //   LIMIT ${limit}
-  // `;
+  const results = await prisma.$queryRaw<any[]>`
+    SELECT c.id, c.text, p.url, p.title
+    FROM "Chunk" c
+    JOIN "Page" p ON c."pageId" = p.id
+    JOIN "Embedding" e ON e."chunkId" = c.id
+    WHERE p."websiteId" = ${websiteId}
+    ORDER BY e.embedding <-> ${queryVector}::vector
+    LIMIT ${limit}
+  `;
   
-  // return results;
-// }
+  return results;
+}
