@@ -4,15 +4,30 @@ import { scrapeWebsiteRecursively } from "./scraping.service.js";
 
 export async function registerWebsite(customerId: string, url: string): Promise<number> {
   const domain = new URL(url).hostname;
-
-  // Create website record 
-  const website = await prisma.website.create({
-    data: {
-      customerId,
-      domain,
-      status: 'pending'
+  const existingWebsite = await prisma.website.findUnique({
+    where: {
+      customerId_domain: {
+        customerId,
+        domain
+      }
     }
   });
+
+
+    if (existingWebsite) {
+      console.log(`Website ${domain} already registered for customer ${customerId}`);
+      throw new Error("Website already registered");
+    }
+
+    // If not, create a new website
+    const website = await prisma.website.create({
+      data: {
+        customerId,
+        domain,
+        // name: new URL(domain).hostname,
+        status: "pending"
+      }
+    });
 
   // Start scraping process in background
   scrapeWebsiteRecursively(url, website.id)
@@ -54,8 +69,8 @@ async function processAllEmbeddings(websiteId: number): Promise<void> {
   } while (processedCount > 0 && batchCount < 100); // Safety limit
   
   // Update website status to completed Todo: Implement this
-  // await prisma.website.update({
-  //   where: { id: websiteId },
-  //   data: { status: 'completed' }
-  // });
+    await prisma.website.update({
+      where: { id: websiteId },
+      data: { status: 'completed' }
+    });
 }

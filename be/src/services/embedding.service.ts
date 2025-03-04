@@ -30,14 +30,19 @@ export function formatArrayAsVectorString (arr: number[]): string {
 export async function storeEmbedding(chunkId: string, embedding: any): Promise<void> {
   const vectorArrayLiteral = formatArrayAsVectorString(embedding);
 
+  // Generate a UUID for the id field if that's what your schema requires
+  const id = crypto.randomUUID(); // You'll need to import crypto
+
   const result = await prisma.$executeRaw`
-      INSERT INTO "Content" (
+      INSERT INTO "Embedding" (
+        "id",
         "chunkId",
         "modelName",
         "dimensions",
-        "vector"
+        "embedding"
       )
       VALUES (
+        ${id},
         ${chunkId},
         'all-MiniLM-L6-v2',
         ${embedding.length},

@@ -73,7 +73,7 @@ export async function scrapeGenericWebsite(url: string) {
       if (href) links.push(href);
     });
 
-    console.log("links", links);
+    // console.log("links", links);
 
     let externalLinks: Set<string> = new Set();
     let internalLinks: Set<string> = new Set();
@@ -210,14 +210,25 @@ export async function scrapeWebsiteRecursively(
         // Process content into chunks
         const chunks = chunkContent(scrapedData.content);
 
+        console.log("chunks", chunks);
+
         // Store chunks
         for (let i = 0; i < chunks.length; i++) {
+
+          const temp = {
+            chunkIndex: i,
+            text: chunks[i],
+            pageId: page.id,
+            // tokenCount: estimateTokens(chunks[i]) // TODO: Implement this
+          }
+
+          console.log("temp", temp);
           // Todo: Implement this
           await prisma.chunk.create({
             data: {
               pageId: page.id,
               chunkIndex: i,
-              text: chunks[i],
+              text: chunks[i].text,
               // tokenCount: estimateTokens(chunks[i]) // TODO: Implement this
             }
           });
