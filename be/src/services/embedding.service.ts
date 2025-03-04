@@ -23,18 +23,27 @@ const initializeModel = async () => {
   return Array.from(output1.data);
 };
 
+export function formatArrayAsVectorString (arr: number[]): string {
+  return `[${arr.join(",")}]`;
+}
+
 export async function storeEmbedding(chunkId: string, embedding: any): Promise<void> {
-  // Convert embedding array to Buffer for storage
-  // const vector = Buffer.from(new Float32Array(embedding).buffer);
-  
-  await prisma.embedding.create({
-    data: {
-      chunkId,
-      modelName: 'all-MiniLM-L6-v2',
-      dimensions: embedding.length,
-      vector
-    }
-  });
+  const vectorArrayLiteral = formatArrayAsVectorString(embedding);
+
+  const result = await prisma.$executeRaw`
+      INSERT INTO "Content" (
+        "chunkId",
+        "modelName",
+        "dimensions",
+        "vector"
+      )
+      VALUES (
+        ${chunkId},
+        'all-MiniLM-L6-v2',
+        ${embedding.length},
+        ${vectorArrayLiteral}::vector
+      );
+    `;
 }
 
 export async function processUnembeddedChunks(batchSize: number = 10): Promise<number> {
