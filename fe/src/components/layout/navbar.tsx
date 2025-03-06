@@ -50,11 +50,13 @@ const Navbar = () => {
           <NavLink href="#how-it-works">How It Works</NavLink>
           <NavLink href="#testimonials">Testimonials</NavLink>
           <NavLink href="#pricing">Pricing</NavLink>
-          <Button 
-            className="bg-gradient-to-r from-fixy-accent to-primary hover:opacity-90 transition-opacity"
-          >
-            Get Started
-          </Button>
+          <Link to="/dashboard">
+            <Button 
+              className="bg-gradient-to-r from-fixy-accent to-primary hover:opacity-90 transition-opacity"
+            >
+              Dashboard
+            </Button>
+          </Link>
         </nav>
 
         {/* Mobile Menu Button */}
@@ -101,12 +103,13 @@ const Navbar = () => {
             >
               Pricing
             </MobileNavLink>
-            <Button 
-              className="bg-gradient-to-r from-fixy-accent to-primary hover:opacity-90 transition-opacity w-full"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Get Started
-            </Button>
+            <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+              <Button 
+                className="bg-gradient-to-r from-fixy-accent to-primary hover:opacity-90 transition-opacity w-full"
+              >
+                Dashboard
+              </Button>
+            </Link>
           </nav>
         </motion.div>
       )}
