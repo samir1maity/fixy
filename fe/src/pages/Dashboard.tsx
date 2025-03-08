@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -35,7 +34,7 @@ const mockWebsites = [
     id: 1,
     name: 'E-commerce Store',
     url: 'https://myecommerce.com',
-    status: 'healthy',
+    status: 'healthy' as 'healthy',
     chatbotActive: true,
     requestsToday: 243,
     requestsTotal: 5892,
@@ -45,7 +44,7 @@ const mockWebsites = [
     id: 2,
     name: 'Portfolio Website',
     url: 'https://myportfolio.dev',
-    status: 'healthy',
+    status: 'healthy' as 'healthy',
     chatbotActive: true,
     requestsToday: 56,
     requestsTotal: 1248,
@@ -55,7 +54,7 @@ const mockWebsites = [
     id: 3,
     name: 'Company Blog',
     url: 'https://ourblog.com',
-    status: 'issues',
+    status: 'issues' as 'issues',
     chatbotActive: false,
     requestsToday: 0,
     requestsTotal: 4571,

@@ -5,6 +5,21 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
 CREATE EXTENSION IF NOT EXISTS "vector" WITH SCHEMA "extensions";
 
 -- CreateTable
+CREATE TABLE "users" (
+    "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "role" TEXT NOT NULL DEFAULT 'user',
+    "resetToken" TEXT,
+    "resetTokenExpiry" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "users_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Website" (
     "id" SERIAL NOT NULL,
     "customerId" TEXT NOT NULL,
@@ -14,6 +29,7 @@ CREATE TABLE "Website" (
     "lastCrawledAt" TIMESTAMP(3),
     "status" TEXT NOT NULL DEFAULT 'pending',
     "maxPages" INTEGER DEFAULT 100,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Website_pkey" PRIMARY KEY ("id")
 );
@@ -27,6 +43,7 @@ CREATE TABLE "Page" (
     "lastCrawledAt" TIMESTAMP(3),
     "contentHash" TEXT,
     "status" TEXT NOT NULL DEFAULT 'pending',
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Page_pkey" PRIMARY KEY ("id")
 );
@@ -40,6 +57,7 @@ CREATE TABLE "Chunk" (
     "tokenCount" INTEGER,
     "sectionTitle" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Chunk_pkey" PRIMARY KEY ("id")
 );
@@ -52,6 +70,7 @@ CREATE TABLE "Embedding" (
     "dimensions" INTEGER NOT NULL,
     "embedding" vector(384),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Embedding_pkey" PRIMARY KEY ("id")
 );
@@ -65,9 +84,13 @@ CREATE TABLE "ChatInteraction" (
     "response" TEXT NOT NULL,
     "chunksUsed" JSONB NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "ChatInteraction_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Website_customerId_domain_key" ON "Website"("customerId", "domain");
@@ -83,6 +106,9 @@ CREATE UNIQUE INDEX "Chunk_pageId_chunkIndex_key" ON "Chunk"("pageId", "chunkInd
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Embedding_chunkId_modelName_key" ON "Embedding"("chunkId", "modelName");
+
+-- AddForeignKey
+ALTER TABLE "Website" ADD CONSTRAINT "Website_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Page" ADD CONSTRAINT "Page_websiteId_fkey" FOREIGN KEY ("websiteId") REFERENCES "Website"("id") ON DELETE CASCADE ON UPDATE CASCADE;

@@ -15,6 +15,22 @@ datasource db {
   extensions = [uuid_ossp(map: "uuid-ossp", schema: "extensions"), vector(schema: "extensions")]
 }
 
+model User {
+  id              String    @id @default(uuid())
+  email           String    @unique
+  password        String
+  name            String
+  role            String    @default("user") // "user" or "admin"
+  resetToken      String?
+  resetTokenExpiry DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  websites        Website[]
+  
+  @@map("users")
+}
+
 model Website {
   id            Int       @id @default(autoincrement())
   customerId    String
@@ -24,9 +40,11 @@ model Website {
   lastCrawledAt DateTime?
   status        String    @default("pending")
   maxPages      Int?      @default(100)
+  updatedAt     DateTime  @updatedAt
 
   Pages            Page[]
   ChatInteractions ChatInteraction[]
+  customer        User     @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   @@unique([customerId, domain])
 }
@@ -39,6 +57,7 @@ model Page {
   lastCrawledAt DateTime?
   contentHash   String? 
   status        String    @default("pending")
+  updatedAt     DateTime  @updatedAt
 
   Website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
   Chunks  Chunk[]
@@ -54,6 +73,7 @@ model Chunk {
   tokenCount   Int?
   sectionTitle String?
   createdAt    DateTime @default(now())
+  updatedAt    DateTime  @updatedAt
 
   Page       Page        @relation(fields: [pageId], references: [id], onDelete: Cascade)
   Embeddings Embedding[]
@@ -67,8 +87,8 @@ model Embedding {
   modelName  String?
   dimensions Int
   embedding  Unsupported("vector(384)")?
-
-  createdAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime  @updatedAt
 
   Chunk Chunk @relation(fields: [chunkId], references: [id], onDelete: Cascade)
 
@@ -83,6 +103,7 @@ model ChatInteraction {
   response   String
   chunksUsed Json
   createdAt  DateTime @default(now())
+  updatedAt  DateTime  @updatedAt
 
   Website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
 }
