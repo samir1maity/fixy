@@ -50,11 +50,19 @@ const Navbar = () => {
           <NavLink href="#how-it-works">How It Works</NavLink>
           <NavLink href="#testimonials">Testimonials</NavLink>
           <NavLink href="#pricing">Pricing</NavLink>
-          <Link to="/dashboard">
+          <Link to="/login">
+            <Button 
+              variant="outline"
+              className="mr-2"
+            >
+              Sign in
+            </Button>
+          </Link>
+          <Link to="/signup">
             <Button 
               className="bg-gradient-to-r from-fixy-accent to-primary hover:opacity-90 transition-opacity"
             >
-              Dashboard
+              Sign up
             </Button>
           </Link>
         </nav>
@@ -103,13 +111,23 @@ const Navbar = () => {
             >
               Pricing
             </MobileNavLink>
-            <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-              <Button 
-                className="bg-gradient-to-r from-fixy-accent to-primary hover:opacity-90 transition-opacity w-full"
-              >
-                Dashboard
-              </Button>
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-2 pt-2">
+              <Link to="/login" className="w-full" onClick={() => setMobileMenuOpen(false)}>
+                <Button 
+                  variant="outline"
+                  className="w-full"
+                >
+                  Sign in
+                </Button>
+              </Link>
+              <Link to="/signup" className="w-full" onClick={() => setMobileMenuOpen(false)}>
+                <Button 
+                  className="w-full bg-gradient-to-r from-fixy-accent to-primary hover:opacity-90 transition-opacity"
+                >
+                  Sign up
+                </Button>
+              </Link>
+            </div>
           </nav>
         </motion.div>
       )}
