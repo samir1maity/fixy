@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CheckCircle2, EyeIcon, EyeOffIcon, Lock, Mail, User } from "lucide-react";
 import { toast } from "sonner";
+import { useApi } from "@/hooks/use-api";
+import userApiService from "@/services/user-api";
+import { useAuth } from "@/contexts/auth-context";
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -14,10 +17,14 @@ const Signup = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const {login} = useAuth();
+  const { loading, error, execute } = useApi({
+    showErrorToast: true,
+    errorMessage: "Login failed. Please check your credentials.",
+  });
 
-  const validatePassword = (password: string) => {
+  const validatePassword = async (password: string) => {
     return password.length >= 8;
   };
 
@@ -38,15 +45,19 @@ const Signup = () => {
       toast.error("Passwords don't match");
       return;
     }
-    
-    setIsLoading(true);
-    
-    // Simulate registration - replace with actual auth logic later
-    setTimeout(() => {
-      setIsLoading(false);
-      toast.success("Account created successfully!");
-      navigate("/dashboard");
-    }, 1500);
+
+    const result = await execute(
+      () => userApiService.register({name, email, password}),
+      {
+        showSuccessToast: true,
+        successMessage: "Account created successfully!",
+      }
+    )
+
+    if (result) {
+      login(result.token, result.user)
+      navigate("/dashboard")
+    }
   };
 
   const passwordStrength = password ? (password.length < 8 ? "weak" : "strong") : "";
@@ -186,9 +197,9 @@ const Signup = () => {
           <Button
             type="submit"
             className="w-full mt-2 bg-gradient-to-r from-fixy-accent to-primary hover:opacity-90 transition-opacity"
-            disabled={isLoading}
+            disabled={loading}
           >
-            {isLoading ? "Creating account..." : "Create account"}
+            {loading ? "Creating account..." : "Create account"}
           </Button>
           
           <div className="text-center mt-6">
