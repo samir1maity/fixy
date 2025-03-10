@@ -1,35 +1,44 @@
-
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EyeIcon, EyeOffIcon, Lock, Mail } from "lucide-react";
-import { toast } from "sonner";
+import { useApi } from "@/hooks/use-api";
+import userApiService from "@/services/user-api";
+import { useAuth } from "@/contexts/auth-context";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
+
+  const from = (location.state as any)?.from?.pathname || "/dashboard";
+
+  const { loading, error, execute } = useApi({
+    showErrorToast: true,
+    errorMessage: "Login failed. Please check your credentials.",
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log("handleSubmit");
     e.preventDefault();
-    
-    if (!email || !password) {
-      toast.error("Please fill in all fields");
-      return;
+
+    const result = await execute(
+      () => userApiService.login({ email, password }),
+      {
+        showSuccessToast: true,
+        successMessage: "Login successful!",
+      }
+    );
+    console.log("result", result);
+    if (result) {
+      login(result.token, result.user);
+      navigate(from, { replace: true });
     }
-    
-    setIsLoading(true);
-    
-    // Simulate authentication - replace with actual auth logic later
-    setTimeout(() => {
-      setIsLoading(false);
-      toast.success("Successfully logged in!");
-      navigate("/dashboard");
-    }, 1500);
   };
 
   return (
@@ -37,7 +46,7 @@ const Login = () => {
       {/* Background Decorations */}
       <div className="blur-dot w-64 h-64 top-0 left-0 bg-fixy-pastel-purple opacity-40"></div>
       <div className="blur-dot w-80 h-80 bottom-0 right-0 bg-fixy-pastel-blue opacity-30"></div>
-      
+
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -55,10 +64,14 @@ const Login = () => {
               </span>
             </div>
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Welcome back</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Sign in to access your account</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Welcome back
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
+            Sign in to access your account
+          </p>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">
             <div className="relative">
@@ -73,7 +86,7 @@ const Login = () => {
               />
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
@@ -106,15 +119,17 @@ const Login = () => {
               </Link>
             </div>
           </div>
-          
+
+          {error && <div className="error">{error.message}</div>}
+
           <Button
             type="submit"
             className="w-full bg-gradient-to-r from-fixy-accent to-primary hover:opacity-90 transition-opacity"
-            disabled={isLoading}
+            disabled={loading}
           >
-            {isLoading ? "Signing in..." : "Sign in"}
+            {loading ? "Signing in..." : "Sign in"}
           </Button>
-          
+
           <div className="text-center mt-6">
             <p className="text-gray-600 dark:text-gray-400 text-sm">
               Don't have an account?{" "}

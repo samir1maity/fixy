@@ -30,12 +30,12 @@ export const userApiService = {
 
   // Login
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
-    return apiService.post<LoginResponse>(`/auth/login`, credentials);
+    return apiService.post<LoginResponse>(`${BASE_PATH}/login`, credentials);
   },
 
   // Register
   register: async (userData: Omit<User, 'id'> & { password: string }): Promise<User> => {
-    return apiService.post<User>(`/auth/register`, userData);
+    return apiService.post<User>(`${BASE_PATH}/signup`, userData);
   },
 
   // Update user

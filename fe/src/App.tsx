@@ -7,6 +7,7 @@ import './App.css';
 import Index from './pages/Index';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
+import Signup from './pages/Signup';
 
 function App() {
   return (
@@ -19,6 +20,14 @@ function App() {
             element={
               <PublicRoute restricted>
                 <Login />
+              </PublicRoute>
+            } 
+          />
+            <Route 
+            path="/signup" 
+            element={
+              <PublicRoute restricted>
+                <Signup />
               </PublicRoute>
             } 
           />

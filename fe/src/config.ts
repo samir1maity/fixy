@@ -1,6 +1,6 @@
 // Configuration values for the application
 const config = {
-  apiBaseUrl: 'https://your-api-url.com',
+  apiBaseUrl: import.meta.env.VITE_API_URL,
   // Add other configuration values here
 };
 
