@@ -14,6 +14,7 @@ router.post('/reset-password', userController.resetPassword);
 router.get('/profile', authenticate, userController.getProfile);
 router.put('/profile', authenticate, userController.updateProfile);
 router.delete('/account', authenticate, userController.deleteAccount);
+router.get('/me', authenticate, userController.getCurrentUser);
 
 // Admin-only routes
 router.get('/users', authenticate, authorize('admin'), userController.getAllUsers);

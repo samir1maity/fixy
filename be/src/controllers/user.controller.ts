@@ -59,6 +59,25 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 };
 
 /**
+ * Get current user controller
+ * GET /api/users/me
+ * Requires authentication
+ */
+export const getCurrentUser = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.user) {
+       res.status(401).json({ error: 'Authentication required' });
+       return;
+    }
+    const user = await userService.getUserProfile(req.user.userId);
+    res.status(200).json({ user });
+  } catch (error) {
+    console.error('Get current user error:', error);
+    res.status(500).json({ error: 'Failed to retrieve current user' });
+  }
+};
+
+/**
  * Forgot password controller
  * POST /api/users/forgot-password
  */
