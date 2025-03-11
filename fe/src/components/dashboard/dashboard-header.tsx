@@ -26,15 +26,9 @@ const DashboardHeader = () => {
         </Link>
 
         <nav className="hidden md:flex items-center space-x-8">
-          <Link to="/dashboard" className="text-gray-900 font-medium dark:text-white">
+          {/* <Link to="/dashboard" className="text-gray-900 font-medium dark:text-white">
             Dashboard
-          </Link>
-          <Link to="/analytics" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white font-medium">
-            Analytics
-          </Link>
-          <Link to="/settings" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white font-medium">
-            Settings
-          </Link>
+          </Link> */}
           <Button 
             className="bg-gradient-to-r from-fixy-accent to-primary hover:opacity-90 transition-opacity"
           >

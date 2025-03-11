@@ -9,7 +9,7 @@ interface WebsiteCardProps {
     id: number;
     name: string;
     url: string;
-    status: 'healthy' | 'issues';
+    status: 'healthy' | 'issues' | 'pending';
     chatbotActive: boolean;
     requestsToday: number;
     requestsTotal: number;

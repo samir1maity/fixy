@@ -27,6 +27,7 @@ import WebsiteCard from '@/components/dashboard/website-card';
 import DashboardHeader from '@/components/dashboard/dashboard-header';
 import DashboardStats from '@/components/dashboard/dashboard-stats';
 import ProfileDropdown from '@/components/dashboard/profile-dropdown';
+import AddWebsiteModal from '@/components/dashboard/add-website-modal';
 
 // Mock data for websites
 const mockWebsites = [
@@ -74,6 +75,7 @@ const Dashboard = () => {
   const { toast } = useToast();
   const [websites, setWebsites] = useState(mockWebsites);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   
   const handleRefresh = () => {
     toast({
@@ -84,11 +86,27 @@ const Dashboard = () => {
   };
   
   const handleAddWebsite = () => {
-    toast({
-      title: "Add a new website",
-      description: "Add your website URL to create a new chatbot",
-    });
-    // This would open a modal or navigate to add website page
+    setIsAddModalOpen(true);
+  };
+  
+  const handleSubmitWebsite = async (url: string) => {
+    // In a real app, you would call your API here
+    // For now, let's simulate a delay
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Add the new website to the list (in a real app, you'd get this from the API)
+    const newWebsite = {
+      id: websites.length + 1,
+      name: new URL(url).hostname,
+      url: url,
+      status: 'pending' as 'healthy' | 'issues' | 'pending',
+      chatbotActive: false,
+      requestsToday: 0,
+      requestsTotal: 0,
+      lastChecked: 'Just now'
+    };
+    
+    // setWebsites(prev => [...prev, newWebsite]);
   };
   
   const filteredWebsites = websites.filter(website => 
@@ -177,6 +195,13 @@ const Dashboard = () => {
           </motion.div>
         </motion.div>
       </main>
+      
+      {/* Add Website Modal */}
+      <AddWebsiteModal 
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSubmit={handleSubmitWebsite}
+      />
     </motion.div>
   );
 };
