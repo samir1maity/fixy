@@ -1,7 +1,6 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, LogOut } from 'lucide-react';
+import { Settings, LogOut, CircleUser } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from 'react-router-dom';
 import { User } from '@/services/user-api';
@@ -31,7 +30,7 @@ const ProfileDropdown = ({user, onLogout}: {user: User, onLogout: () => void}) =
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative z-50" ref={dropdownRef}>
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
@@ -52,7 +51,7 @@ const ProfileDropdown = ({user, onLogout}: {user: User, onLogout: () => void}) =
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="absolute right-0 mt-2 w-48 rounded-xl border bg-background shadow-lg"
+            className="absolute right-0 mt-2 w-48 rounded-xl border bg-background shadow-lg z-50"
           >
             <div className="p-2">
               <div className="p-3 border-b">
@@ -66,18 +65,17 @@ const ProfileDropdown = ({user, onLogout}: {user: User, onLogout: () => void}) =
                   className="flex items-center space-x-2 p-2 rounded-lg hover:bg-accent transition-colors"
                   onClick={() => setIsOpen(false)}
                 >
-                  {/* <User className="w-4 h-4" /> */}
-                  User
+                  <CircleUser className="w-4 h-4" />
                   <span>Profile</span>
                 </Link>
-                <Link 
+                {/* <Link 
                   to="/settings" 
                   className="flex items-center space-x-2 p-2 rounded-lg hover:bg-accent transition-colors"
                   onClick={() => setIsOpen(false)}
                 >
                   <Settings className="w-4 h-4" />
                   <span>Settings</span>
-                </Link>
+                </Link> */}
                 <Link 
                   to="/" 
                   className="flex items-center space-x-2 p-2 rounded-lg hover:bg-accent transition-colors"
