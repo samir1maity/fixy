@@ -16,7 +16,7 @@ export const websiteApiService = {
         return apiService.post<Website>('/websites', { url });
     },
     getWebsites: async (): Promise<Website[]> => {
-        return apiService.get<Website[]>('/api/websites');
+        return apiService.get<Website[]>('/websites');
     }
 }
 

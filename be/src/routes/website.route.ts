@@ -5,6 +5,6 @@ import { authenticate } from "../middlewares/auth.middleware.js";
 const websiteRouter = Router();
 
 websiteRouter.post("/", authenticate, registerWebsite);
-websiteRouter.get("/api/websites", authenticate, getWebsites);
+websiteRouter.get("/", authenticate, getWebsites);
 
 export default websiteRouter;

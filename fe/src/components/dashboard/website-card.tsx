@@ -8,7 +8,7 @@ interface WebsiteCardProps {
   website: {
     id: number;
     name: string;
-    url: string;
+    domain: string;
     status: 'healthy' | 'issues' | 'pending';
     chatbotActive: boolean;
     requestsToday: number;
@@ -25,17 +25,17 @@ const WebsiteCard = ({ website }: WebsiteCardProps) => {
     >
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h3 className="font-semibold text-lg">{website.name}</h3>
-          <a 
-            href={website.url} 
+          {/* <h3 className="font-semibold text-lg">{website.name}</h3> */}
+          <a
+            href={website.domain} 
             target="_blank" 
             rel="noopener noreferrer"
-            className="text-sm text-muted-foreground flex items-center hover:text-primary transition-colors"
+            className="text-lg font-semibold text-muted-foreground flex items-center hover:text-primary transition-colors"
           >
-            {website.url} <ExternalLink className="ml-1 h-3 w-3" />
+            {website.domain} <ExternalLink className="ml-1 h-3 w-3" />
           </a>
         </div>
-        <div className="flex items-center">
+        {/* <div className="flex items-center">
           {website.status === 'healthy' ? (
             <div className="flex items-center text-green-500">
               <Heart className="h-5 w-5 mr-1.5" />
@@ -47,10 +47,10 @@ const WebsiteCard = ({ website }: WebsiteCardProps) => {
               <span className="text-sm font-medium">Issues</span>
             </div>
           )}
-        </div>
+        </div> */}
       </div>
       
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      {/* <div className="grid grid-cols-2 gap-4 mb-4">
         <div className="bg-muted/50 p-3 rounded-lg">
           <p className="text-sm text-muted-foreground">Today</p>
           <p className="text-2xl font-semibold">{website.requestsToday}</p>
@@ -65,9 +65,9 @@ const WebsiteCard = ({ website }: WebsiteCardProps) => {
             <MessageSquare className="h-3 w-3 mr-1" /> Requests
           </p>
         </div>
-      </div>
+      </div> */}
       
-      <div className="flex justify-between items-center">
+      {/* <div className="flex justify-between items-center">
         <p className="text-xs text-muted-foreground">
           Last checked: {website.lastChecked}
         </p>
@@ -78,7 +78,7 @@ const WebsiteCard = ({ website }: WebsiteCardProps) => {
         >
           {website.chatbotActive ? "Active" : "Inactive"}
         </Button>
-      </div>
+      </div> */}
     </motion.div>
   );
 };

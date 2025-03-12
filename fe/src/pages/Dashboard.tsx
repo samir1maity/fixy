@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
@@ -75,27 +75,40 @@ const mockStats = {
 
 const Dashboard = () => {
   const { toast } = useToast();
-  const [websites, setWebsites] = useState(mockWebsites);
+  const [websites, setWebsites] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  
-  const handleRefresh = () => {
-    toast({
-      title: "Refreshing website status",
-      description: "Checking health status for all websites",
-    });
-    // Here you would typically fetch updated data
-  };
-  
-  const handleAddWebsite = () => {
-    setIsAddModalOpen(true);
-  };
 
   const { loading, error, execute } = useApi({
     showErrorToast: true,
     errorMessage: "Login failed. Please check your credentials.",
   });
   
+  useEffect(() => {
+    handleRefresh();
+  }, []);
+  
+  const handleRefresh = async () => {
+    toast({
+      title: "Refreshing website status",
+      description: "Checking health status for all websites",
+    });
+    // Here you would typically fetch updated data
+    const result = await execute(
+      () => websiteApiService.getWebsites(),
+      {
+        showSuccessToast: true,
+        successMessage: "Website status refreshed successfully!",
+      }
+    );
+    console.log('result -->', result);
+    setWebsites(result);
+  };
+  
+  const handleAddWebsite = () => {
+    setIsAddModalOpen(true);
+  };
+
   const handleSubmitWebsite = async (url: string) => {
 
     const result = await execute(
@@ -110,8 +123,8 @@ const Dashboard = () => {
   };
   
   const filteredWebsites = websites.filter(website => 
-    website.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    website.url.toLowerCase().includes(searchQuery.toLowerCase())
+    // website.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    website.domain.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
   return (
