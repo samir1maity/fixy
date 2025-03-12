@@ -93,7 +93,7 @@ export async function retrieveSimilarChunks(
     FROM "Chunk" c
     JOIN "Page" p ON c."pageId" = p.id
     JOIN "Embedding" e ON e."chunkId" = c.id
-    WHERE p."websiteId" = ${websiteId}
+    WHERE p."websiteId" = ${websiteId}::integer
     ORDER BY e.embedding <-> ${queryVector}::vector
     LIMIT ${limit}
   `;

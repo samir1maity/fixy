@@ -4,7 +4,7 @@ import { generateChatResponse, generateSessionId, getChatHistory,  } from "../se
 const chatRouter = Router();
 
 // Chat endpoint with session support
-chatRouter.post('/chat', (req: Request, res: Response) => {
+chatRouter.post('/', (req: Request, res: Response) => {
     (async () => {  
     try {
       const { query, websiteId, sessionId } = req.body;

@@ -21,7 +21,7 @@ app.use(
 
 // app.use(optionalAuth);
 
-app.use('/', chatRouter)
+app.use('/api/v1/chat', chatRouter)
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/websites', websiteRouter);
 

@@ -17,20 +17,17 @@ export async function generateChatResponse(
   sources: Array<{ url: string; title: string; relevance: number }>; 
   followupQuestions?: string[];
 }> {
-
-
-
   // Retrieve relevant chunks with similarity scores
   const relevantChunks = await retrieveSimilarChunks(query, websiteId, 3);
   
   if (relevantChunks.length === 0) {
     return {
-      answer: "I couldn't find any relevant information to answer your question. Could you rephrase or ask something else about this website?",
+      answer: "Hmm, I'm drawing a blank on that one! 🤔 Could you try asking in a different way? I'm eager to help but might need a hint to point me in the right direction!",
       sources: [],
       followupQuestions: [
-        "What specific information are you looking for?",
-        "Would you like to know general information about this website instead?",
-        "Can I help you navigate to a different topic?"
+        "Would you like me to tell you what topics I know about this website?",
+        "Can I help you find something else instead?",
+        "Maybe we could start with a more general question?"
       ]
     };
   }
@@ -54,7 +51,7 @@ export async function generateChatResponse(
   
   // Format context from chunks with metadata
   const context = finalChunks.map((chunk, i) => 
-    `[DOCUMENT ${i+1}] (Source: ${chunk.title || 'Untitled'}, URL: ${chunk.url})
+    `[CONTENT ${i+1}] (Source: ${chunk.title || 'Untitled'}, URL: ${chunk.url})
     ${chunk.text}
     `
   ).join("\n\n");
@@ -69,22 +66,20 @@ export async function generateChatResponse(
       }]
     )).values()
   );
+  
+  // Generate system prompt with a more conversational tone
+  const systemPrompt = `You are an intelligent and friendly, helpful assistant that answers questions based on information from a specific website. Your personality is warm, slightly witty, and conversational.
 
-  console.log('unique sources', uniqueSources);
+  IMPORTANT GUIDELINES:
+  1. Answer based on the website content I'll provide, but don't mention "documents" or "provided information" - make it sound natural.
+  2. Never say phrases like "based on the provided documents" or "according to the information."
+  3. If you don't know something, be honest but friendly: "I don't seem to have that information, but I'd be happy to help with something else!"
+  4. Use a conversational, friendly tone with occasional light humor where appropriate.
+  5. Format responses using Markdown for readability when helpful.
+  6. Keep responses concise but informative.
+  7. Occasionally use emojis where appropriate for a friendly tone (but don't overdo it).
   
-  // Generate system prompt
-  const systemPrompt = `You are an intelligent assistant that answers questions based on information from a specific website. 
-  
-  IMPORTANT INSTRUCTIONS:
-  1. Base your answers ONLY on the provided documents. If the information isn't in the documents, say "I don't have enough information to answer that question based on the website content."
-  2. Cite your sources using [DOCUMENT X] notation.
-  3. Be concise but comprehensive.
-  4. Format your response using Markdown when appropriate.
-  5. If you quote text directly, use quotation marks.
-  6. Analyze the information critically and provide thoughtful insights.
-  7. Maintain a helpful, professional tone.
-  
-  DOCUMENTS FROM WEBSITE:
+  WEBSITE CONTENT:
   ${context}`;
 
   try {
@@ -102,8 +97,8 @@ export async function generateChatResponse(
         },
       ],
       generationConfig: {
-        temperature: 0.2,
-        topP: 0.8,
+        temperature: 0.4, // Slightly higher for more personality
+        topP: 0.85,
         topK: 40,
         maxOutputTokens: 800,
       },
@@ -114,7 +109,7 @@ export async function generateChatResponse(
       history: [
         {
           role: "user",
-          parts: [{ text: "I'll be asking questions about a website. Please follow the instructions carefully." }],
+          parts: [{ text: "Hi! I'll be asking questions about a website. I want you to be helpful, friendly and conversational and Please follow the instructions carefully." }],
         },
         {
           role: "model",
@@ -126,8 +121,8 @@ export async function generateChatResponse(
         }))
       ],
       generationConfig: {
-        temperature: 0.2,
-        topP: 0.8,
+        temperature: 0.4,
+        topP: 0.85,
         topK: 40,
         maxOutputTokens: 800,
       },
@@ -145,10 +140,11 @@ export async function generateChatResponse(
     const followupResult = await model.generateContent(`
       Based on this user question: "${query}" 
       And this answer: "${response}"
-      And these website documents: 
+      And these website contents: 
       ${finalChunks.map(c => c.text).join("\n\n").substring(0, 1000)}
       
-      Generate 3 natural follow-up questions the user might want to ask next.
+      Generate 3 natural, conversational follow-up questions the user might want to ask next.
+      Make them sound casual and friendly, as if continuing a conversation.
       Return ONLY the questions as a JSON array of strings, nothing else.
       Example: ["Question 1?", "Question 2?", "Question 3?"]
     `);
@@ -183,7 +179,7 @@ export async function generateChatResponse(
   } catch (error) {
     console.error('Error calling Gemini API:', error);
     return {
-      answer: "I'm sorry, I encountered an error while generating a response. Please try again in a moment.",
+      answer: "Oops! 😅 I seem to be having a moment. My circuits got a bit tangled. Could we try that again in a second?",
       sources: uniqueSources
     };
   }
