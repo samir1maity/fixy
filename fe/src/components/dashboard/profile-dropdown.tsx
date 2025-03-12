@@ -1,13 +1,15 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Settings, LogOut } from 'lucide-react';
+import { Settings, LogOut } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from 'react-router-dom';
+import { User } from '@/services/user-api';
 
-const ProfileDropdown = () => {
+const ProfileDropdown = ({user, onLogout}: {user: User, onLogout: () => void}) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  console.log('user -->', user);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -23,6 +25,11 @@ const ProfileDropdown = () => {
     };
   }, []);
 
+  const handleLogout = () => {
+    onLogout();
+    setIsOpen(false);
+  };
+
   return (
     <div className="relative" ref={dropdownRef}>
       <motion.button
@@ -35,7 +42,7 @@ const ProfileDropdown = () => {
           <AvatarImage src="https://github.com/shadcn.png" alt="User" />
           <AvatarFallback>JD</AvatarFallback>
         </Avatar>
-        <span className="text-sm font-medium">John Doe</span>
+        <span className="text-sm font-medium">{user?.name}</span>
       </motion.button>
 
       <AnimatePresence>
@@ -49,8 +56,8 @@ const ProfileDropdown = () => {
           >
             <div className="p-2">
               <div className="p-3 border-b">
-                <p className="font-medium">John Doe</p>
-                <p className="text-sm text-muted-foreground">john@example.com</p>
+                <p className="font-medium">{user?.name}</p>
+                <p className="text-sm text-muted-foreground">{user?.email}</p>
               </div>
               
               <div className="py-1">
@@ -59,7 +66,8 @@ const ProfileDropdown = () => {
                   className="flex items-center space-x-2 p-2 rounded-lg hover:bg-accent transition-colors"
                   onClick={() => setIsOpen(false)}
                 >
-                  <User className="w-4 h-4" />
+                  {/* <User className="w-4 h-4" /> */}
+                  User
                   <span>Profile</span>
                 </Link>
                 <Link 
@@ -73,7 +81,7 @@ const ProfileDropdown = () => {
                 <Link 
                   to="/" 
                   className="flex items-center space-x-2 p-2 rounded-lg hover:bg-accent transition-colors"
-                  onClick={() => setIsOpen(false)}
+                  onClick={handleLogout}
                 >
                   <LogOut className="w-4 h-4" />
                   <span>Log out</span>

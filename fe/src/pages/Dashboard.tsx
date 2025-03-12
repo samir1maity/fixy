@@ -31,6 +31,7 @@ import AddWebsiteModal from '@/components/dashboard/add-website-modal';
 import { useApi } from '@/hooks/use-api';
 import websiteApiService from '@/services/website-api';
 import analyticsApiService, { UserChatStats } from '@/services/analytics-api';
+import { useAuth } from '@/contexts/auth-context';
 
 // Mock data for websites
 const mockWebsites = [
@@ -75,6 +76,7 @@ const mockStats = {
 };
 
 const Dashboard = () => {
+  const { user, isAuthenticated, logout } = useAuth();
   const { toast } = useToast();
   const [websites, setWebsites] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -180,7 +182,10 @@ const Dashboard = () => {
             <p className="text-muted-foreground">Manage and monitor your website chatbots</p>
           </motion.div>
           <div className="flex items-center mt-4 md:mt-0 space-x-2">
-            <ProfileDropdown />
+            <ProfileDropdown 
+              user={user} 
+              onLogout={logout}
+            />
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}

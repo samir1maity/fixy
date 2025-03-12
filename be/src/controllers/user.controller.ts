@@ -70,7 +70,7 @@ export const getCurrentUser = async (req: Request, res: Response, next: NextFunc
        return;
     }
     const user = await userService.getUserProfile(req.user.userId);
-    res.status(200).json({ user });
+    res.status(200).json(user);
   } catch (error) {
     console.error('Get current user error:', error);
     res.status(500).json({ error: 'Failed to retrieve current user' });
