@@ -1,14 +1,10 @@
 
+import { UserChatStats } from '@/services/analytics-api';
 import { motion } from 'framer-motion';
 import { Globe, Check, MessageSquare, BarChart } from 'lucide-react';
 
 interface DashboardStatsProps {
-  stats: {
-    totalWebsites: number;
-    activeWebsites: number;
-    totalRequests: number;
-    requestsToday: number;
-  };
+  stats: UserChatStats
 }
 
 const DashboardStats = ({ stats }: DashboardStatsProps) => {
@@ -29,13 +25,13 @@ const DashboardStats = ({ stats }: DashboardStatsProps) => {
       <StatCard
         icon={<MessageSquare className="h-5 w-5" />}
         title="Requests Today"
-        value={stats.requestsToday}
+        value={stats.todayChats}
         color="bg-purple-50 text-purple-500 dark:bg-purple-900/20 dark:text-purple-400"
       />
       <StatCard
         icon={<BarChart className="h-5 w-5" />}
         title="Total Requests"
-        value={stats.totalRequests}
+        value={stats.totalChats}
         color="bg-amber-50 text-amber-500 dark:bg-amber-900/20 dark:text-amber-400"
       />
     </div>

@@ -9,7 +9,7 @@ export interface UserChatStats {
 
 export const analyticsApiService = {
     getUserChatStats: async (): Promise<UserChatStats> => {
-        return apiService.post<UserChatStats>('/analytics/user-chat-stats');
+        return apiService.get<UserChatStats>('/analytics/user-chat-stats');
     },
 }
 

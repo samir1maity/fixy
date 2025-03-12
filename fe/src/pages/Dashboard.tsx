@@ -30,6 +30,7 @@ import ProfileDropdown from '@/components/dashboard/profile-dropdown';
 import AddWebsiteModal from '@/components/dashboard/add-website-modal';
 import { useApi } from '@/hooks/use-api';
 import websiteApiService from '@/services/website-api';
+import analyticsApiService, { UserChatStats } from '@/services/analytics-api';
 
 // Mock data for websites
 const mockWebsites = [
@@ -78,23 +79,36 @@ const Dashboard = () => {
   const [websites, setWebsites] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [stats, setStats] = useState<UserChatStats>({
+    totalWebsites: 0,
+    activeWebsites: 0,
+    todayChats: 0,
+    totalChats: 0
+  });
 
-  const { loading, error, execute } = useApi({
+  const { loading: websitesLoading, execute: executeWebsiteFetch } = useApi({
+    showErrorToast: true,
+    errorMessage: "Login failed. Please check your credentials.",
+  });
+  
+  const { loading: statsLoading, execute: executeStatsFetch } = useApi({
     showErrorToast: true,
     errorMessage: "Login failed. Please check your credentials.",
   });
   
   useEffect(() => {
-    handleRefresh();
-  }, []);
+    handleFetchWebsites();
+    handleFetchStats();
+  }, [isRefreshing]);
   
-  const handleRefresh = async () => {
+  const handleFetchWebsites = async () => {
     toast({
       title: "Refreshing website status",
       description: "Checking health status for all websites",
     });
     // Here you would typically fetch updated data
-    const result = await execute(
+    const result = await executeWebsiteFetch(
       () => websiteApiService.getWebsites(),
       {
         showSuccessToast: true,
@@ -104,14 +118,28 @@ const Dashboard = () => {
     console.log('result -->', result);
     setWebsites(result);
   };
-  
+
+  const handleFetchStats = async () => {
+    const result = await executeStatsFetch(
+      () => analyticsApiService.getUserChatStats(),
+      {
+        showSuccessToast: true,
+      }
+    );
+    console.log('result -->', result);
+    if(!result) return;
+    if (result) {
+      setStats(result);
+    }
+  };
+
   const handleAddWebsite = () => {
     setIsAddModalOpen(true);
   };
 
   const handleSubmitWebsite = async (url: string) => {
 
-    const result = await execute(
+    const result = await executeWebsiteFetch(
       () => websiteApiService.registerWebsite(url),
       {
         showSuccessToast: true,
@@ -127,6 +155,11 @@ const Dashboard = () => {
     website.domain.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
+  const handleRefresh = () => {
+    handleFetchWebsites();
+    handleFetchStats();
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -168,7 +201,7 @@ const Dashboard = () => {
         </div>
         
         {/* Dashboard Stats */}
-        <DashboardStats stats={mockStats} />
+        <DashboardStats stats={stats} />
         
         {/* Search */}
         <div className="my-6 relative">
@@ -188,9 +221,12 @@ const Dashboard = () => {
           animate="show"
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
-          {filteredWebsites.map((website) => (
+          {websitesLoading && <div className="text-center py-4">Loading websites...</div>}
+          {!websitesLoading && filteredWebsites.map((website) => (
             <WebsiteCard key={website.id} website={website} />
           ))}
+          
+          {!websitesLoading && filteredWebsites.length === 0 && <div className="text-center py-4">No websites found</div>}
           
           {/* Add New Website Card */}
           <motion.div
@@ -214,8 +250,8 @@ const Dashboard = () => {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSubmit={handleSubmitWebsite}
-        loading={loading}
-        error={error}
+        loading={websitesLoading}
+        error={websitesLoading ? new Error("Error registering website") : null}
       />
     </motion.div>
   );
