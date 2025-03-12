@@ -3,7 +3,7 @@ import apiService from "./api";
 export interface Website {
   id: number;
   name: string;
-  url: string;
+  domain: string;
   status: 'healthy' | 'issues' | 'pending';
   chatbotActive: boolean;
   requestsToday: number;
@@ -17,7 +17,7 @@ export const websiteApiService = {
     },
     getWebsites: async (): Promise<Website[]> => {
         return apiService.get<Website[]>('/websites');
-    }
+    },
 }
 
-  export default websiteApiService; 
+export default websiteApiService; 
