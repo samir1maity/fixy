@@ -74,3 +74,21 @@ async function processAllEmbeddings(websiteId: number): Promise<void> {
       data: { status: 'completed' }
     });
 }
+
+export async function getWebsitesService(userId: string){
+
+  if(!userId) {
+    throw new Error("User ID is required");
+  }
+
+  if(typeof userId !== 'string') {
+    throw new Error("User ID must be a string");
+  }
+
+  return prisma.website.findMany({
+    where: {
+      customerId: userId
+    }
+  });
+}
+
