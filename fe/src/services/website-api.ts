@@ -13,7 +13,7 @@ export interface Website {
 
 export const websiteApiService = {
     registerWebsite: async (url: string): Promise<Website> => {
-        return apiService.post<Website>('/api/websites', { url });
+        return apiService.post<Website>('/websites', { url });
     },
     getWebsites: async (): Promise<Website[]> => {
         return apiService.get<Website[]>('/api/websites');

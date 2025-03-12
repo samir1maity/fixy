@@ -28,6 +28,8 @@ import DashboardHeader from '@/components/dashboard/dashboard-header';
 import DashboardStats from '@/components/dashboard/dashboard-stats';
 import ProfileDropdown from '@/components/dashboard/profile-dropdown';
 import AddWebsiteModal from '@/components/dashboard/add-website-modal';
+import { useApi } from '@/hooks/use-api';
+import websiteApiService from '@/services/website-api';
 
 // Mock data for websites
 const mockWebsites = [
@@ -88,25 +90,23 @@ const Dashboard = () => {
   const handleAddWebsite = () => {
     setIsAddModalOpen(true);
   };
+
+  const { loading, error, execute } = useApi({
+    showErrorToast: true,
+    errorMessage: "Login failed. Please check your credentials.",
+  });
   
   const handleSubmitWebsite = async (url: string) => {
-    // In a real app, you would call your API here
-    // For now, let's simulate a delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Add the new website to the list (in a real app, you'd get this from the API)
-    const newWebsite = {
-      id: websites.length + 1,
-      name: new URL(url).hostname,
-      url: url,
-      status: 'pending' as 'healthy' | 'issues' | 'pending',
-      chatbotActive: false,
-      requestsToday: 0,
-      requestsTotal: 0,
-      lastChecked: 'Just now'
-    };
-    
-    // setWebsites(prev => [...prev, newWebsite]);
+
+    const result = await execute(
+      () => websiteApiService.registerWebsite(url),
+      {
+        showSuccessToast: true,
+        successMessage: "Website registered successfully!",
+      }
+    );
+
+    console.log('result', result);
   };
   
   const filteredWebsites = websites.filter(website => 
@@ -201,6 +201,8 @@ const Dashboard = () => {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSubmit={handleSubmitWebsite}
+        loading={loading}
+        error={error}
       />
     </motion.div>
   );

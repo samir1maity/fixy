@@ -4,6 +4,7 @@ import chatRouter from "./routes/chat.route.js";
 import userRoutes from './routes/user.route.js';
 import cors from 'cors';
 import { optionalAuth } from './middlewares/auth.middleware.js';
+import websiteRouter from "./routes/website.route.js";
 
 const app = express();
 app.use(express.json());
@@ -22,6 +23,7 @@ app.use(
 
 app.use('/', chatRouter)
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/websites', websiteRouter);
 
 
 const PORT = process.env.PORT || 3000;

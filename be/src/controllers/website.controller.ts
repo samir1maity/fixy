@@ -29,7 +29,7 @@ export const getWebsites = async (req: Request, res: Response) => {
   try {
     const customerId = req.user?.userId;
     
-    if (!customerId) {
+    if (!customerId || typeof customerId !== 'string') {
       res.status(400).json({ error: 'Missing required parameters' });
       return;
     }

@@ -30,7 +30,7 @@ export function formatArrayAsVectorString (arr: number[]): string {
 
 export async function storeEmbedding(chunkId: string, embedding: any): Promise<void> {
   const vectorArrayLiteral = formatArrayAsVectorString(embedding);
-
+  const now = new Date();
   const id = crypto.randomUUID();
 
   const result = await prisma.$executeRaw`
@@ -39,14 +39,18 @@ export async function storeEmbedding(chunkId: string, embedding: any): Promise<v
         "chunkId",
         "modelName",
         "dimensions",
-        "embedding"
+        "embedding",
+        "createdAt",
+        "updatedAt"
       )
       VALUES (
         ${id},
         ${chunkId},
         'all-MiniLM-L6-v2',
         ${embedding.length},
-        ${vectorArrayLiteral}::vector
+        ${vectorArrayLiteral}::vector,
+        ${now},
+        ${now}
       );
     `;
 }

@@ -10,12 +10,14 @@ interface AddWebsiteModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (url: string) => Promise<void>;
+  loading: boolean;
+  error: Error | null;
 }
 
-const AddWebsiteModal = ({ isOpen, onClose, onSubmit }: AddWebsiteModalProps) => {
+const AddWebsiteModal = ({ isOpen, onClose, onSubmit, loading, error }: AddWebsiteModalProps) => {
   const { toast } = useToast();
   const [url, setUrl] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  // const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,7 +33,7 @@ const AddWebsiteModal = ({ isOpen, onClose, onSubmit }: AddWebsiteModalProps) =>
     }
 
     try {
-      setIsLoading(true);
+      // setIsLoading(true);
       
       // Simulate progress
       const interval = setInterval(() => {
@@ -52,7 +54,7 @@ const AddWebsiteModal = ({ isOpen, onClose, onSubmit }: AddWebsiteModalProps) =>
       // Close after a delay
       setTimeout(() => {
         clearInterval(interval);
-        setIsLoading(false);
+        // setIsLoading(false);
         setUrl('');
         setProgress(0);
         onClose();
@@ -64,7 +66,7 @@ const AddWebsiteModal = ({ isOpen, onClose, onSubmit }: AddWebsiteModalProps) =>
       }, 1500);
       
     } catch (error) {
-      setIsLoading(false);
+      // setIsLoading(false);
       setProgress(0);
       toast({
         title: "Failed to add website",
@@ -95,7 +97,7 @@ const AddWebsiteModal = ({ isOpen, onClose, onSubmit }: AddWebsiteModalProps) =>
             <button 
               onClick={onClose} 
               className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              disabled={isLoading}
+              disabled={loading}
             >
               <X size={20} />
             </button>
@@ -115,12 +117,12 @@ const AddWebsiteModal = ({ isOpen, onClose, onSubmit }: AddWebsiteModalProps) =>
                   placeholder="https://example.com"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  disabled={isLoading}
+                  disabled={loading}
                   className="w-full"
                 />
               </div>
               
-              {isLoading && (
+              {loading && (
                 <div className="mb-4">
                   <Progress value={progress} className="h-2 bg-gray-100 dark:bg-gray-800" />
                   <p className="text-sm text-center mt-2 text-gray-500 dark:text-gray-400">
@@ -132,9 +134,9 @@ const AddWebsiteModal = ({ isOpen, onClose, onSubmit }: AddWebsiteModalProps) =>
               <Button
                 type="submit"
                 className="w-full bg-gradient-to-r from-fixy-accent to-primary hover:opacity-90"
-                disabled={isLoading}
+                disabled={loading}
               >
-                {isLoading ? (
+                {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Processing
