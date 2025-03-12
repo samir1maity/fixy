@@ -8,6 +8,7 @@ import Index from './pages/Index';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import ChatPage from './pages/ChatPage';
 
 function App() {
   return (
@@ -49,6 +50,15 @@ function App() {
               <PublicRoute restricted>
                  <Index/>
                </PublicRoute>
+            } 
+          />
+          
+          <Route 
+            path="/chat/:id" 
+            element={
+              <ProtectedRoute>
+                <ChatPage />
+              </ProtectedRoute>
             } 
           />
         </Routes>

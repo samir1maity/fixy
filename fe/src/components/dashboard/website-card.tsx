@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, AlertTriangle, MessageSquare, ExternalLink, Copy, Eye, EyeOff, Check } from 'lucide-react';
+import { Heart, AlertTriangle, MessageSquare, ExternalLink, Copy, Eye, EyeOff, Check, PenSquare } from 'lucide-react';
 import { fadeUp } from '@/lib/motion';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { Link } from 'react-router-dom';
 
 interface WebsiteCardProps {
   website: {
@@ -46,8 +47,17 @@ const WebsiteCard = ({ website }: WebsiteCardProps) => {
   return (
     <motion.div
       variants={fadeUp()}
-      className="border rounded-xl p-6 hover:shadow-md transition-shadow bg-card text-card-foreground"
+      className="border rounded-xl p-6 hover:shadow-md transition-shadow bg-card text-card-foreground relative"
     >
+      {/* Test Chat Button */}
+      <Link 
+        to={`/chat/${website.id}`}
+        className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-primary/10 hover:bg-primary/20 transition-colors"
+        title="Test Chatbot"
+      >
+        <PenSquare className="h-4 w-4 text-primary" />
+      </Link>
+      
       <div className="flex justify-between items-start mb-4">
         <div>
           {/* <h3 className="font-semibold text-lg">{website.name}</h3> */}
