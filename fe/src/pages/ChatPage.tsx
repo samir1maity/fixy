@@ -9,18 +9,13 @@ import { useApi } from '@/hooks/use-api';
 import ReactMarkdown from 'react-markdown';
 import apiService from '@/services/api';
 import DashboardHeader from '@/components/dashboard/dashboard-header';
+import chatApiService, { ChatResponse } from '@/services/chat-api';
 
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
-}
-
-interface ChatResponse {
-  answer: string;
-  sources: Array<{ url: string; title: string; relevance: number }>;
-  followupQuestions?: string[];
 }
 
 const ChatPage = () => {
@@ -81,10 +76,10 @@ const ChatPage = () => {
     
     setMessages(prev => [...prev, userMessage]);
     setInput('');
-    
+    console.log('input -->', input);
     try {
       const response = await execute(() => 
-        apiService.post<ChatResponse>(`/api/v1/chat`, {
+        chatApiService.sendMessage({
           query: input,
           websiteId: Number(id)
         })
@@ -101,22 +96,22 @@ const ChatPage = () => {
         setMessages(prev => [...prev, botMessage]);
         
         // If there are follow-up questions, add them as a suggestion
-        if (response.followupQuestions && response.followupQuestions.length > 0) {
-          const suggestionsContent = `
-Here are some follow-up questions you might want to ask:
+        // if (response.followupQuestions && response.followupQuestions.length > 0) {
+        //   const suggestionsContent = `
+        //     Here are some follow-up questions you might want to ask:
 
-${response.followupQuestions.map(q => `- ${q}`).join('\n')}
-          `;
+        //     ${response.followupQuestions.map(q => `- ${q}`).join('\n')}
+        //   `;
           
-          const suggestionsMessage: Message = {
-            id: (Date.now() + 2).toString(),
-            role: 'assistant',
-            content: suggestionsContent,
-            timestamp: new Date()
-          };
+        //   const suggestionsMessage: Message = {
+        //     id: (Date.now() + 2).toString(),
+        //     role: 'assistant',
+        //     content: suggestionsContent,
+        //     timestamp: new Date()
+        //   };
           
-          setMessages(prev => [...prev, suggestionsMessage]);
-        }
+        //   setMessages(prev => [...prev, suggestionsMessage]);
+        // }
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -138,8 +133,8 @@ ${response.followupQuestions.map(q => `- ${q}`).join('\n')}
     >
       <DashboardHeader />
       
-      <main className="container mx-auto px-4 py-8 mt-20 flex-1 flex flex-col">
-        <div className="mb-6">
+      <main className="container mx-auto px-4 py-8 mt-20 flex flex-col h-[calc(100vh-80px)]">
+        <div className="mb-6 flex flex-col items-start">
           <div className="flex items-center mb-2">
             <Link to="/dashboard" className="mr-4">
               <Button variant="ghost" size="icon">
@@ -153,7 +148,7 @@ ${response.followupQuestions.map(q => `- ${q}`).join('\n')}
               </span>
             )}
           </div>
-          <p className="text-muted-foreground ml-12">
+          <p className="text-muted-foreground ml-14">
             Test how your AI assistant responds to questions about your website content
           </p>
         </div>

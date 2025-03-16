@@ -14,7 +14,7 @@ export interface ChatResponse {
 
 export const chatApiService = {
   sendMessage: async (request: ChatRequest): Promise<ChatResponse> => {
-    return apiService.post<ChatResponse>('/api/v1/chat', request);
+    return apiService.post<ChatResponse>('/chat', request);
   },
   
   getWebsiteInfo: async (websiteId: number): Promise<any> => {
