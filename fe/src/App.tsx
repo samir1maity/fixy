@@ -1,20 +1,24 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/auth-context";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
+import SuspenseFallback from "./pages/Suspense";
 import "./App.css";
-import Index from "./pages/Index";
-import Dashboard from "./pages/Dashboard";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import ChatPage from "./pages/ChatPage";
-import Profile from "./pages/Profile";
+
+// Lazy load components
+const Index = lazy(() => import("./pages/Index"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Login = lazy(() => import("./pages/Login"));
+const Signup = lazy(() => import("./pages/Signup"));
+const ChatPage = lazy(() => import("./pages/ChatPage"));
+const Profile = lazy(() => import("./pages/Profile"));
 
 function App() {
   return (
     <AuthProvider>
       <Router>
+      <Suspense fallback={<SuspenseFallback />}>
         <Routes>
           {/* Public routes */}
           <Route
@@ -73,6 +77,7 @@ function App() {
           />
 
         </Routes>
+        </Suspense>
       </Router>
     </AuthProvider>
   );

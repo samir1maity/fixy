@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/auth-context';
+import SuspenseFallback from '@/pages/Suspense';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -12,7 +13,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   // Show loading state while checking authentication
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <SuspenseFallback />;
   }
 
   // Redirect to login if not authenticated

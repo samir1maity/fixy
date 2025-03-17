@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/auth-context';
+import SuspenseFallback from '@/pages/Suspense';
 
 interface PublicRouteProps {
   children: React.ReactNode;
@@ -16,7 +17,7 @@ const PublicRoute: React.FC<PublicRouteProps> = ({ children, restricted = false 
 
   // Show loading state while checking authentication
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <SuspenseFallback />;
   }
 
   // If route is restricted and user is authenticated, redirect to intended destination
