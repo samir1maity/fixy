@@ -18,6 +18,9 @@ export const websiteApiService = {
     getWebsites: async (): Promise<Website[]> => {
         return apiService.get<Website[]>('/websites');
     },
+    getWebsiteInfo: async (websiteId: number): Promise<any> => {
+        return apiService.get(`/websites/${websiteId}`);
+    },
 }
 
 export default websiteApiService; 

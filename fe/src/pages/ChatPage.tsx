@@ -1,30 +1,27 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Send, ArrowLeft, Bot, User, Loader2 } from 'lucide-react';
+import { Send, ArrowLeft, Bot, User, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useApi } from '@/hooks/use-api';
 import ReactMarkdown from 'react-markdown';
-import apiService from '@/services/api';
+// import apiService from '@/services/api';
 import DashboardHeader from '@/components/dashboard/dashboard-header';
-import chatApiService, { ChatResponse } from '@/services/chat-api';
-
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-}
+import chatApiService from '@/services/chat-api';
+import { useChatHistory } from '@/hooks/use-chat-history';
+import websiteApiService from '@/services/website-api';
 
 const ChatPage = () => {
   const { id } = useParams<{ id: string }>();
-  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [websiteInfo, setWebsiteInfo] = useState<{ domain: string } | null>(null);
+  const [websiteInfo, setWebsiteInfo] = useState<{ domain: string; api_secret?: string } | null>(null);
+  const [apiSecret, setApiSecret] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  
+  const { messages, sessionId, addMessage, clearChat, updateSessionId } = useChatHistory(id || 'default');
   
   const { loading, execute } = useApi({
     showErrorToast: true,
@@ -32,21 +29,23 @@ const ChatPage = () => {
   });
 
   useEffect(() => {
-    // Fetch website info
     const fetchWebsiteInfo = async () => {
       try {
-        const response = await apiService.get(`/websites/${id}`);
-        // setWebsiteInfo(response);
+        const savedSecret = localStorage.getItem(`api_secret_${id}`);
         
-        // Add welcome message
-        setMessages([
-          {
-            id: '0',
-            role: 'assistant',
-            content: `👋 Hi there! I'm your AI assistant for. How can I help you today?`,
-            timestamp: new Date()
-          }
-        ]);
+        const response = await websiteApiService.getWebsiteInfo(Number(id));
+        setWebsiteInfo(response);
+        
+        if (savedSecret) {
+          setApiSecret(savedSecret);
+        } else if (response && response.api_secret) {
+          setApiSecret(response.api_secret);
+          localStorage.setItem(`api_secret_${id}`, response.api_secret);
+        }
+        
+        if (messages.length === 0) {
+          addMessage('assistant', `👋 Hi there! I'm your AI assistant for ${response.domain || 'your website'}. How can I help you today?`);
+        }
       } catch (error) {
         toast({
           title: "Error",
@@ -60,58 +59,32 @@ const ChatPage = () => {
   }, [id]);
 
   useEffect(() => {
-    // Scroll to bottom when messages change
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const handleSendMessage = async () => {
     if (!input.trim() || loading) return;
     
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: input,
-      timestamp: new Date()
-    };
+    addMessage('user', input);
     
-    setMessages(prev => [...prev, userMessage]);
+    const currentInput = input;
     setInput('');
-    console.log('input -->', input);
+    
     try {
       const response = await execute(() => 
         chatApiService.sendMessage({
-          query: input,
-          websiteId: Number(id)
-        })
+          query: currentInput,
+          websiteId: Number(id),
+          sessionId: sessionId || undefined
+        }, apiSecret || undefined)
       );
       
       if (response) {
-        const botMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: response.answer,
-          timestamp: new Date()
-        };
+        addMessage('assistant', response.answer);
         
-        setMessages(prev => [...prev, botMessage]);
-        
-        // If there are follow-up questions, add them as a suggestion
-        // if (response.followupQuestions && response.followupQuestions.length > 0) {
-        //   const suggestionsContent = `
-        //     Here are some follow-up questions you might want to ask:
-
-        //     ${response.followupQuestions.map(q => `- ${q}`).join('\n')}
-        //   `;
-          
-        //   const suggestionsMessage: Message = {
-        //     id: (Date.now() + 2).toString(),
-        //     role: 'assistant',
-        //     content: suggestionsContent,
-        //     timestamp: new Date()
-        //   };
-          
-        //   setMessages(prev => [...prev, suggestionsMessage]);
-        // }
+        if (response.sessionId && response.sessionId !== sessionId) {
+          updateSessionId(response.sessionId);
+        }
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -125,6 +98,19 @@ const ChatPage = () => {
     }
   };
 
+  const handleClearChat = () => {
+    clearChat();
+    toast({
+      title: "Chat cleared",
+      description: "Your conversation history has been cleared",
+    });
+    
+    setTimeout(() => {
+      const domain = websiteInfo?.domain || 'your website';
+      addMessage('assistant', `👋 Hi there! I'm your AI assistant for ${domain}. How can I help you today?`);
+    }, 100);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -135,18 +121,30 @@ const ChatPage = () => {
       
       <main className="container mx-auto px-4 py-8 mt-20 flex flex-col h-[calc(100vh-80px)]">
         <div className="mb-6 flex flex-col items-start">
-          <div className="flex items-center mb-2">
-            <Link to="/dashboard" className="mr-4">
-              <Button variant="ghost" size="icon">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <h1 className="text-3xl font-bold">Test Chatbot</h1>
-            {websiteInfo && (
-              <span className="ml-4 text-muted-foreground">
-                {websiteInfo.domain}
-              </span>
-            )}
+          <div className="flex items-center mb-2 w-full justify-between">
+            <div className="flex items-center">
+              <Link to="/dashboard" className="mr-4">
+                <Button variant="ghost" size="icon">
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+              </Link>
+              <h1 className="text-3xl font-bold">Test Chatbot</h1>
+              {websiteInfo && (
+                <span className="ml-4 text-muted-foreground">
+                  {websiteInfo.domain}
+                </span>
+              )}
+            </div>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleClearChat}
+              className="text-destructive hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Clear Chat
+            </Button>
           </div>
           <p className="text-muted-foreground ml-14">
             Test how your AI assistant responds to questions about your website content
