@@ -33,6 +33,7 @@ import websiteApiService, { Website } from '@/services/website-api';
 import analyticsApiService, { UserChatStats } from '@/services/analytics-api';
 import { useAuth } from '@/contexts/auth-context';
 import { usePolling } from '@/hooks/use-polling';
+import { toast as sonnerToast } from "sonner";
 
 
 const Dashboard = () => {
@@ -79,9 +80,10 @@ const Dashboard = () => {
         stopPolling();
         
         if (pendingWebsites.length > 0) {
-          toast({
-            title: "Processing complete",
+          sonnerToast.success("Processing complete", {
             description: "All websites have been processed",
+            position: "top-right",
+            duration: 5000,
           });
         }
       }
@@ -92,10 +94,10 @@ const Dashboard = () => {
       interval: 5000,
       maxAttempts: 60, // 5 minutes max (60 * 5s)
       onError: () => {
-        toast({
-          title: "Error",
+        sonnerToast.error("Error", {
           description: "Failed to update website status",
-          variant: "destructive",
+          position: "top-right",
+          duration: 5000,
         });
       }
     }

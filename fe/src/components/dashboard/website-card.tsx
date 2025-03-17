@@ -4,6 +4,7 @@ import { ExternalLink, Copy, Eye, EyeOff, PenSquare, Loader2 } from 'lucide-reac
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
+import { toast as sonnerToast } from 'sonner';
 
 interface WebsiteCardProps {
   website: {
@@ -21,23 +22,24 @@ interface WebsiteCardProps {
 
 const WebsiteCard = ({ website, isPending = false }: WebsiteCardProps) => {
   const [showSecret, setShowSecret] = useState(false);
-  const [apiSecret, setApiSecret] = useState<string | null>(null);
+  const [apiSecret, setApiSecret] = useState<string | null>(website.api_secret);
   const { toast } = useToast();
 console.log('website after adding to dashboard-->', website);
   const handleCopyDomain = () => {
     navigator.clipboard.writeText(website.domain);
-    toast({
-      title: "Copied!",
-      description: "Domain copied to clipboard",
+    sonnerToast.success("Domain copied", {
+      position: "top-right",
+      duration: 3000,
     });
   };
 
   const handleCopySecret = () => {
+    console.log('first')
     if (apiSecret) {
       navigator.clipboard.writeText(apiSecret);
-      toast({
-        title: "Copied!",
-        description: "API secret copied to clipboard",
+      sonnerToast.success("Api Secret copied", {
+        position: "top-right",
+        duration: 3000,
       });
     }
   };

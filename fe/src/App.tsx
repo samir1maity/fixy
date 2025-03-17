@@ -5,6 +5,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 import SuspenseFallback from "./pages/Suspense";
 import "./App.css";
+import { Toaster } from "./components/ui/sonner";
 
 // Lazy load components
 const Index = lazy(() => import("./pages/Index"));
@@ -18,66 +19,67 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-      <Suspense fallback={<SuspenseFallback />}>
-        <Routes>
-          {/* Public routes */}
-          <Route
-            path="/login"
-            element={
-              <PublicRoute restricted>
-                <Login />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/signup"
-            element={
-              <PublicRoute restricted>
-                <Signup />
-              </PublicRoute>
-            }
-          />
+        <Suspense fallback={<SuspenseFallback />}>
+          <Routes>
+            {/* Public routes */}
+            <Route
+              path="/login"
+              element={
+                <PublicRoute restricted>
+                  <Login />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/signup"
+              element={
+                <PublicRoute restricted>
+                  <Signup />
+                </PublicRoute>
+              }
+            />
 
-          {/* Protected routes */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
+            {/* Protected routes */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Redirect root to dashboard */}
-          <Route
-            path="/"
-            element={
-              <PublicRoute restricted>
-                <Index />
-              </PublicRoute>
-            }
-          />
+            {/* Redirect root to dashboard */}
+            <Route
+              path="/"
+              element={
+                <PublicRoute restricted>
+                  <Index />
+                </PublicRoute>
+              }
+            />
 
-          <Route
-            path="/chat/:id"
-            element={
-              <ProtectedRoute>
-                <ChatPage />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/chat/:id"
+              element={
+                <ProtectedRoute>
+                  <ChatPage />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
 
-        </Routes>
+          </Routes>
         </Suspense>
+        <Toaster />
       </Router>
     </AuthProvider>
   );

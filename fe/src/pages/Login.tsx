@@ -7,6 +7,7 @@ import { EyeIcon, EyeOffIcon, Lock, Mail } from "lucide-react";
 import { useApi } from "@/hooks/use-api";
 import userApiService from "@/services/user-api";
 import { useAuth } from "@/contexts/auth-context";
+import { toast as sonnerToast } from 'sonner';
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -15,10 +16,11 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
+  const [loading, setLoading] = useState(false);
 
   const from = (location.state as any)?.from?.pathname || "/dashboard";
 
-  const { loading, error, execute } = useApi({
+  const { error, execute } = useApi({
     showErrorToast: true,
     errorMessage: "Login failed. Please check your credentials.",
   });
@@ -26,18 +28,34 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     console.log("handleSubmit");
     e.preventDefault();
+    setLoading(true);
 
-    const result = await execute(
-      () => userApiService.login({ email, password }),
-      {
-        showSuccessToast: true,
-        successMessage: "Login successful!",
+    try {
+      const result = await execute(
+        () => userApiService.login({ email, password }),
+        {
+          showSuccessToast: true,
+          successMessage: "Login successful!",
+        }
+      );
+      console.log("result", result);
+      if (result) {
+        login(result.token, result.user);
+        sonnerToast.success("Login successful!", {
+          description: "Welcome back!",
+          position: "top-right",
+          duration: 5000,
+        });
+        navigate(from, { replace: true });
       }
-    );
-    console.log("result", result);
-    if (result) {
-      login(result.token, result.user);
-      navigate(from, { replace: true });
+    } catch (error) {
+      sonnerToast.error("Login failed", {
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        position: "top-right",
+        duration: 5000,
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
