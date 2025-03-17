@@ -8,7 +8,6 @@ import { User } from '@/services/user-api';
 const ProfileDropdown = ({user, onLogout}: {user: User, onLogout: () => void}) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  console.log('user -->', user);
 
   // Close dropdown when clicking outside
   useEffect(() => {

@@ -29,56 +29,16 @@ import DashboardStats from '@/components/dashboard/dashboard-stats';
 import ProfileDropdown from '@/components/dashboard/profile-dropdown';
 import AddWebsiteModal from '@/components/dashboard/add-website-modal';
 import { useApi } from '@/hooks/use-api';
-import websiteApiService from '@/services/website-api';
+import websiteApiService, { Website } from '@/services/website-api';
 import analyticsApiService, { UserChatStats } from '@/services/analytics-api';
 import { useAuth } from '@/contexts/auth-context';
+import { usePolling } from '@/hooks/use-polling';
 
-// Mock data for websites
-const mockWebsites = [
-  {
-    id: 1,
-    name: 'E-commerce Store',
-    url: 'https://myecommerce.com',
-    status: 'healthy' as 'healthy',
-    chatbotActive: true,
-    requestsToday: 243,
-    requestsTotal: 5892,
-    lastChecked: '2 mins ago'
-  },
-  {
-    id: 2,
-    name: 'Portfolio Website',
-    url: 'https://myportfolio.dev',
-    status: 'healthy' as 'healthy',
-    chatbotActive: true,
-    requestsToday: 56,
-    requestsTotal: 1248,
-    lastChecked: '5 mins ago'
-  },
-  {
-    id: 3,
-    name: 'Company Blog',
-    url: 'https://ourblog.com',
-    status: 'issues' as 'issues',
-    chatbotActive: false,
-    requestsToday: 0,
-    requestsTotal: 4571,
-    lastChecked: '10 mins ago'
-  }
-];
-
-// Mock data for stats
-const mockStats = {
-  totalWebsites: 3,
-  activeWebsites: 2,
-  totalRequests: 11711,
-  requestsToday: 299
-};
 
 const Dashboard = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const { toast } = useToast();
-  const [websites, setWebsites] = useState([]);
+  const [websites, setWebsites] = useState<Website[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -88,6 +48,7 @@ const Dashboard = () => {
     todayChats: 0,
     totalChats: 0
   });
+  const [pendingWebsites, setPendingWebsites] = useState<number[]>([]);
 
   const { loading: websitesLoading, execute: executeWebsiteFetch } = useApi({
     showErrorToast: true,
@@ -99,28 +60,69 @@ const Dashboard = () => {
     errorMessage: "Login failed. Please check your credentials.",
   });
   
-  useEffect(() => {
-    handleFetchWebsites();
-    handleFetchStats();
-  }, [isRefreshing]);
-  
-  const handleFetchWebsites = async () => {
-    toast({
-      title: "Refreshing website status",
-      description: "Checking health status for all websites",
-    });
-    // Here you would typically fetch updated data
-    const result = await executeWebsiteFetch(
-      () => websiteApiService.getWebsites(),
-      {
-        showSuccessToast: true,
-        successMessage: "Website status refreshed successfully!",
+  // Polling hook for checking website status
+  const { startPolling, stopPolling } = usePolling(
+    async () => {
+      const allWebsites = await executeWebsiteFetch(() => websiteApiService.getWebsites());
+      console.log('allWebsites -->', allWebsites);
+      setWebsites(allWebsites);
+      
+      // Check for any pending or embedding websites
+      const pending = allWebsites.filter(
+        website => website.status === 'pending' || website.status === 'embedding'
+      ).map(w => w.id);
+      
+      setPendingWebsites(pending);
+      
+      if (pending.length === 0) {
+        console.log('No pending websites, stopping polling');
+        stopPolling();
+        
+        if (pendingWebsites.length > 0) {
+          toast({
+            title: "Processing complete",
+            description: "All websites have been processed",
+          });
+        }
       }
-    );
-    console.log('result -->', result);
-    setWebsites(result);
-  };
+      
+      return allWebsites;
+    },
+    {
+      interval: 5000,
+      maxAttempts: 60, // 5 minutes max (60 * 5s)
+      onError: () => {
+        toast({
+          title: "Error",
+          description: "Failed to update website status",
+          variant: "destructive",
+        });
+      }
+    }
+  );
 
+  useEffect(() => {
+    loadWebsites();
+    handleFetchStats()
+  }, [isRefreshing]);
+
+  const loadWebsites = async () => {
+    const data = await executeWebsiteFetch(() => websiteApiService.getWebsites());
+    if (data) {
+      setWebsites(data);
+      
+      // Check for any pending or embedding websites
+      const pending = data.filter(
+        website => website.status === 'pending' || website.status === 'embedding'
+      ).map(w => w.id);
+      if (pending.length > 0) {
+        setPendingWebsites(pending);
+        startPolling();
+      }
+    }
+  };
+  
+  // fetching user stats - count of websites, active websites, today chats, total chats
   const handleFetchStats = async () => {
     const result = await executeStatsFetch(
       () => analyticsApiService.getUserChatStats(),
@@ -140,16 +142,39 @@ const Dashboard = () => {
   };
 
   const handleSubmitWebsite = async (url: string) => {
-
-    const result = await executeWebsiteFetch(
-      () => websiteApiService.registerWebsite(url),
-      {
-        showSuccessToast: true,
-        successMessage: "Website registered successfully!",
+    try {
+      const response = await executeWebsiteFetch(() => websiteApiService.registerWebsite(url));
+      
+      if (response) {
+        // Add the new website to the list with pending status
+        const newWebsite: Website = {
+          id: response.id,
+          domain: new URL(url).hostname,
+          status: 'pending',
+          chatbotActive: false,
+          requestsToday: 0,
+          requestsTotal: 0,
+          lastChecked: new Date().toISOString(),
+          name: new URL(url).hostname,
+          api_secret: response.api_secret
+        };
+        
+        setWebsites(prev => [...prev, newWebsite]);
+        setPendingWebsites(prev => [...prev, response.id]);
+        
+        // Start polling if not already polling
+        startPolling();
+        
+        setIsAddModalOpen(false);
+        
+        toast({
+          title: "Website added",
+          description: "Your website is being processed. This may take a few minutes.",
+        });
       }
-    );
-
-    console.log('result', result);
+    } catch (error) {
+      console.error('Error adding website:', error);
+    }
   };
   
   const filteredWebsites = websites.filter(website => 
@@ -158,7 +183,7 @@ const Dashboard = () => {
   );
   
   const handleRefresh = () => {
-    handleFetchWebsites();
+    executeWebsiteFetch(() => websiteApiService.getWebsites());
     handleFetchStats();
   };
 
@@ -228,7 +253,11 @@ const Dashboard = () => {
         >
           {websitesLoading && <div className="text-center py-4">Loading websites...</div>}
           {!websitesLoading && filteredWebsites.map((website) => (
-            <WebsiteCard key={website.id} website={website} />
+            <WebsiteCard 
+              key={website.id} 
+              website={website} 
+              isPending={pendingWebsites.includes(website.id)}
+            />
           ))}
           
           {!websitesLoading && filteredWebsites.length === 0 && <div className="text-center py-4">No websites found</div>}
@@ -250,7 +279,7 @@ const Dashboard = () => {
         </motion.div>
       </main>
       
-      {/* Add Website Modal */}
+
       <AddWebsiteModal 
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}

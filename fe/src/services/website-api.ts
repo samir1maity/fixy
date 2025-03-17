@@ -4,11 +4,12 @@ export interface Website {
   id: number;
   name: string;
   domain: string;
-  status: 'healthy' | 'issues' | 'pending';
+  status: 'pending' | 'embedding' | 'completed' | 'failed';
   chatbotActive: boolean;
   requestsToday: number;
   requestsTotal: number;
   lastChecked: string;
+  api_secret: string;
 }
 
 export const websiteApiService = {
@@ -16,6 +17,7 @@ export const websiteApiService = {
         return apiService.post<Website>('/websites', { url });
     },
     getWebsites: async (): Promise<Website[]> => {
+        console.log('code reached to getWebsites');
         return apiService.get<Website[]>('/websites');
     },
     getWebsiteInfo: async (websiteId: number): Promise<any> => {

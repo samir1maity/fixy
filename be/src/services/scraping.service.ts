@@ -176,7 +176,7 @@ export async function scrapeWebsiteRecursively(
   // Update website status to processing Todo: Implement this
   await prisma.website.update({
     where: { id: websiteId },
-    data: { status: 'processing' }
+    data: { status: 'pending' }
   });
   
   let pagesProcessed = 0;
@@ -190,7 +190,7 @@ export async function scrapeWebsiteRecursively(
       continue;
     }
     
-    console.log(`Scraping ${url} (depth: ${depth})`);
+    // console.log(`Scraping ${url} (depth: ${depth})`);
     visitedUrls.add(url);
     
     try {
@@ -210,7 +210,7 @@ export async function scrapeWebsiteRecursively(
         // Process content into chunks
         const chunks = chunkContent(scrapedData.content);
 
-        console.log("chunks", chunks);
+        // console.log("chunks", chunks);
 
         // Store chunks
         for (let i = 0; i < chunks.length; i++) {
@@ -222,7 +222,7 @@ export async function scrapeWebsiteRecursively(
             // tokenCount: estimateTokens(chunks[i]) // TODO: Implement this
           }
 
-          console.log("temp", temp);
+          // console.log("temp", temp);
           // Todo: Implement this
           await prisma.chunk.create({
             data: {

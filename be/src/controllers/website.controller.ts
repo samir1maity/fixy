@@ -13,7 +13,7 @@ export const registerWebsite = async (req: Request, res: Response) => {
     }
     
     const websiteId = await registerWebsiteService(customerId, url);
-    
+    console.log('websiteId -->', websiteId);
     res.status(201).json({
       websiteId,
       status: 'pending',
