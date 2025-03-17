@@ -1,6 +1,7 @@
 import { prisma } from "../configs/db.js";
 import { processUnembeddedChunks } from "./embedding.service.js";
 import { scrapeWebsiteRecursively } from "./scraping.service.js";
+import { v4 as uuidv4 } from 'uuid';
 
 export async function registerWebsite(customerId: string, url: string): Promise<number> {
   const domain = new URL(url).hostname;
@@ -19,13 +20,16 @@ export async function registerWebsite(customerId: string, url: string): Promise<
       throw new Error("Website already registered");
     }
 
+    const api_secret = uuidv4();
+
     // If not, create a new website
     const website = await prisma.website.create({
       data: {
         customerId,
         domain,
         // name: new URL(domain).hostname,
-        status: "pending"
+        status: "pending",
+        api_secret
       }
     });
 

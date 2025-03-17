@@ -41,6 +41,7 @@ model Website {
   status        String    @default("pending")
   maxPages      Int?      @default(100)
   updatedAt     DateTime  @updatedAt
+  api_secret    String?
 
   Pages            Page[]
   ChatInteractions ChatInteraction[]
