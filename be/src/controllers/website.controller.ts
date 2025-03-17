@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { generateSecret, getWebsitesService, registerWebsite as registerWebsiteService } from '../services/website.service.js';
+import { generateSecret, getWebsiteInfoService, getWebsitesService, registerWebsite as registerWebsiteService } from '../services/website.service.js';
 
 // Register a new website
 export const registerWebsite = async (req: Request, res: Response) => {
@@ -41,6 +41,22 @@ export const getWebsites = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to get websites' });
   }
 };
+
+export const getWebsiteInfo = async (req: Request, res: Response) => {
+  try {
+    const id = Number(req?.params?.id);
+    if (!id || isNaN(Number(id))) {
+      res.status(400).json({ error: 'Missing required parameters' }); 
+      return;
+    }
+    const website = await getWebsiteInfoService(id);
+    res.json(website);
+  } catch (error) {
+    console.error('Get website info error:', error);  
+    res.status(500).json({ error: 'Failed to get website info' });
+  }
+};
+
 
 export const regenerateSecret = async (req: Request, res: Response) => {
   try {

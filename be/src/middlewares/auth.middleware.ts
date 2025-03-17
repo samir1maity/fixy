@@ -14,7 +14,6 @@ declare global {
       };
       website?: {
         websiteId: number;
-        domain: string;
       }
     }
   }
@@ -175,31 +174,31 @@ export const isResourceOwner = (paramName: string = 'userId') => {
  */
 export const authenticateChat = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const secretKey = req.headers["x-secret-key"] as string | undefined;
+    const apiSecret = req.headers['x-api-secret'] as string;
+    const websiteId = Number(req.body.websiteId);
     
-    if (!secretKey) {
+    if (!apiSecret || !websiteId) {
       res.status(401).json({ error: 'Authentication required' });
       return;
     }
-
+    
     const website = await prisma.website.findFirst({
-      where: { api_secret:  secretKey},
-      select: { id: true, domain: true }
+      where: {
+        id: websiteId,
+        api_secret: apiSecret
+      }
     });
+
     
     if (!website) {
-      res.status(401).json({ error: 'Invalid authentication secret' });
+      res.status(401).json({ error: 'Invalid API key for this website' });
       return;
     }
-
-    req.website = {
-      websiteId: website.id,
-      domain: website.domain
-    };
-
+    
+    req.website = { websiteId: website.id };
     next();
   } catch (error) {
     console.error('Authentication error:', error);
-      res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
