@@ -1,11 +1,10 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CheckCircle2, EyeIcon, EyeOffIcon, Lock, Mail, User } from "lucide-react";
-import { toast } from "sonner";
+import { toast as sonnerToast } from "sonner";
 import { useApi } from "@/hooks/use-api";
 import userApiService from "@/services/user-api";
 import { useAuth } from "@/contexts/auth-context";
@@ -18,7 +17,7 @@ const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
-  const {login} = useAuth();
+  const { login } = useAuth();
   const { loading, error, execute } = useApi({
     showErrorToast: true,
     errorMessage: "Login failed. Please check your credentials.",
@@ -32,31 +31,42 @@ const Signup = () => {
     e.preventDefault();
     
     if (!name || !email || !password || !confirmPassword) {
-      toast.error("Please fill in all fields");
+      sonnerToast.error("Please fill in all fields");
       return;
     }
     
     if (!validatePassword(password)) {
-      toast.error("Password must be at least 8 characters");
+      sonnerToast.error("Password must be at least 8 characters");
       return;
     }
     
     if (password !== confirmPassword) {
-      toast.error("Passwords don't match");
+      sonnerToast.error("Passwords don't match");
       return;
     }
 
     const result = await execute(
-      () => userApiService.register({name, email, password}),
+      () => userApiService.register({ name, email, password }),
       {
         showSuccessToast: true,
         successMessage: "Account created successfully!",
       }
-    )
+    );
 
     if (result) {
-      login(result.token, result.user)
-      navigate("/dashboard")
+      login(result.token, result.user);
+      sonnerToast.success("Signup successful!", {
+        description: "Welcome to fixy!",
+        position: "top-right",
+        duration: 5000,
+      });
+      navigate("/dashboard");
+    } else {
+      sonnerToast.error("Signup failed", {
+        description: "An unknown error occurred. Please try again later.",
+        position: "top-right",
+        duration: 5000,
+      });
     }
   };
 

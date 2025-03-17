@@ -26,13 +26,10 @@ const DashboardHeader = () => {
         </Link>
 
         {/* <nav className="hidden md:flex items-center space-x-8">
-          <Link to="/dashboard" className="text-gray-900 font-medium dark:text-white">
-            Dashboard
-          </Link>
           <Button 
             className="bg-gradient-to-r from-fixy-accent to-primary hover:opacity-90 transition-opacity"
           >
-            Upgrade Plan
+            Feedback form
           </Button>
         </nav> */}
       </div>
