@@ -12,6 +12,10 @@ declare global {
         userId: string;
         email?: string;
       };
+      website?: {
+        websiteId: number;
+        domain: string;
+      }
     }
   }
 }
@@ -163,3 +167,39 @@ export const isResourceOwner = (paramName: string = 'userId') => {
     next();
   };
 }; 
+
+
+/**
+ * Middleware to authenticate chat requests using secret key
+ * Adds website object to request if authentication is successful
+ */
+export const authenticateChat = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const secretKey = req.headers["x-secret-key"] as string | undefined;
+    
+    if (!secretKey) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+
+    const website = await prisma.website.findFirst({
+      where: { api_secret:  secretKey},
+      select: { id: true, domain: true }
+    });
+    
+    if (!website) {
+      res.status(401).json({ error: 'Invalid authentication secret' });
+      return;
+    }
+
+    req.website = {
+      websiteId: website.id,
+      domain: website.domain
+    };
+
+    next();
+  } catch (error) {
+    console.error('Authentication error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+  }
+};

@@ -1,13 +1,15 @@
 import { Request, Response, Router } from "express";
 import { generateChatResponse, generateSessionId, getChatHistory,  } from "../services/chat.service.js";
+import { authenticateChat } from "../middlewares/auth.middleware.js";
 
 const chatRouter = Router();
 
 // Chat endpoint with session support
-chatRouter.post('/', (req: Request, res: Response) => {
+chatRouter.post('/', authenticateChat, (req: Request, res: Response) => {
     (async () => {  
     try {
-      const { query, websiteId, sessionId } = req.body;
+      const { query, sessionId } = req.body;
+      const websiteId = req.website?.websiteId;
       
       if (!query || !websiteId) {
         return res.status(400).json({ error: 'Missing required parameters' });

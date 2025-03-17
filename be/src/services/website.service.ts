@@ -96,3 +96,11 @@ export async function getWebsitesService(userId: string){
   });
 }
 
+export async function generateSecret(websiteId: number): Promise<string> {
+  const secret = uuidv4();
+  await prisma.website.update({
+    where: { id: websiteId },
+    data: { api_secret: secret }
+  });
+  return secret;
+}
