@@ -50,6 +50,7 @@ const Navbar = () => {
           <NavLink href="#how-it-works">How It Works</NavLink>
           <NavLink href="#testimonials">Testimonials</NavLink>
           <NavLink href="#pricing">Pricing</NavLink>
+          <div>
           <Link to="/login">
             <Button 
               variant="outline"
@@ -65,6 +66,7 @@ const Navbar = () => {
               Sign up
             </Button>
           </Link>
+          </div>      
         </nav>
 
         {/* Mobile Menu Button */}

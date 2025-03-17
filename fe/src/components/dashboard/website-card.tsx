@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, AlertTriangle, MessageSquare, ExternalLink, Copy, Eye, EyeOff, Check, PenSquare } from 'lucide-react';
+import { ExternalLink, Copy, Eye, EyeOff, Check, PenSquare } from 'lucide-react';
 import { fadeUp } from '@/lib/motion';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -11,7 +11,7 @@ interface WebsiteCardProps {
     id: number;
     name: string;
     domain: string;
-    status: 'healthy' | 'issues' | 'pending';
+    status: 'completed' | 'failed' | 'pending';
     chatbotActive: boolean;
     requestsToday: number;
     requestsTotal: number;
@@ -129,16 +129,16 @@ const WebsiteCard = ({ website }: WebsiteCardProps) => {
       {/* Status Badge */}
       <div className="mt-4 flex justify-end">
         <div className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center ${
-          website.status === 'healthy' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
+          website.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
           website.status === 'pending' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' :
           'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
         }`}>
           <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-            website.status === 'healthy' ? 'bg-green-500' :
+            website.status === 'completed' ? 'bg-green-500' :
             website.status === 'pending' ? 'bg-amber-500' :
             'bg-red-500'
           }`}></span>
-          {website.status === 'healthy' ? 'Active' : 
+          {website.status === 'completed' ? 'Active' : 
            website.status === 'pending' ? 'Processing' : 'Issues'}
         </div>
       </div>
