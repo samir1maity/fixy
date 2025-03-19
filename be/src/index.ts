@@ -3,7 +3,6 @@ import "dotenv/config";
 import chatRouter from "./routes/chat.route.js";
 import userRoutes from './routes/user.route.js';
 import cors from 'cors';
-import { optionalAuth } from './middlewares/auth.middleware.js';
 import websiteRouter from "./routes/website.route.js";
 import analyticsRouter from "./routes/analytics.route.js";
 
@@ -20,7 +19,9 @@ app.use(
   })
 );
 
-// app.use(optionalAuth);
+app.get('/',(req,res)=>{
+  res.send("welcome to fixy backend");
+})
 
 app.use('/api/v1/chat', chatRouter)
 app.use('/api/v1/users', userRoutes);

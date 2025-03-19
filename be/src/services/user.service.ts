@@ -1,4 +1,4 @@
-import { PrismaClient, User } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
@@ -8,6 +8,13 @@ import nodemailer from 'nodemailer';
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const RESET_TOKEN_EXPIRY = 3600000; // 1 hour in milliseconds
+
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  password: string; 
+}
 
 // Zod validation schemas
 const signupSchema = z.object({
