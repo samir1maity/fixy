@@ -1,9 +1,22 @@
 import { prisma } from "../configs/db.js";
 import { getWebsitesService } from "./website.service.js";
 
+export interface Website {
+  id: number;
+  name: string;
+  domain: string;
+  status: 'pending' | 'embedding' | 'completed' | 'failed';
+  chatbotActive: boolean;
+  requestsToday: number;
+  requestsTotal: number;
+  lastChecked: string;
+  api_secret: string;
+}
+
 export async function getUserChatStats(userId: string) {
-  const websites = await getWebsitesService(userId);
-  const websiteIds = websites.map((website) => website.id);
+  //@ts-ignore
+  const websites: Website[] = await getWebsitesService(userId);
+  const websiteIds = websites.map((website: Website) => website.id);
 
   if (websiteIds.length === 0) {
     return {
@@ -37,7 +50,7 @@ export async function getUserChatStats(userId: string) {
   });
 
   const activeWebsites = websites.filter(
-    (website) => website.status === "completed"
+    (website: Website) => website.status === "completed"
   ).length;
 
   return {

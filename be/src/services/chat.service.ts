@@ -210,7 +210,7 @@ export function generateSessionId(): string {
 
 // Function to maintain chat history for conversational context
 export async function getChatHistory(sessionId: string, limit: number = 5): Promise<Array<{role: string, content: string}>> {
-  const interactions = await prisma.chatInteraction.findMany({
+  const interactions: any[] = await prisma.chatInteraction.findMany({
     where: {
       sessionId
     },
@@ -224,7 +224,7 @@ export async function getChatHistory(sessionId: string, limit: number = 5): Prom
   const history: Array<{role: string, content: string}> = [];
   
   // Reverse to get chronological order
-  interactions.reverse().forEach(interaction => {
+  interactions.reverse().forEach((interaction: any) => {
     history.push({
       role: "user",
       content: interaction.query
