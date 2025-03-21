@@ -18,9 +18,10 @@ interface WebsiteCardProps {
     api_secret: string;
   };
   isPending?: boolean;
+  isPolling?: boolean;
 }
 
-const WebsiteCard = ({ website, isPending = false }: WebsiteCardProps) => {
+const WebsiteCard = ({ website, isPending = false, isPolling = false }: WebsiteCardProps) => {
   const [showSecret, setShowSecret] = useState(false);
   const [apiSecret, setApiSecret] = useState<string | null>(website.api_secret);
   const { toast } = useToast();
@@ -41,6 +42,20 @@ console.log('website after adding to dashboard-->', website);
         position: "top-right",
         duration: 3000,
       });
+    }
+  };
+
+  // Determine the status display
+  const getStatusDisplay = () => {
+    if (isPending) {
+      return (
+        <span className="flex items-center">
+          Processing <Loader2 className="ml-1 h-3 w-3 animate-spin" />
+        </span>
+      );
+    } else {
+      return website.status === 'completed' ? 'Active' : 
+             website.status === 'pending' || website.status === 'embedding' ? 'Processing' : 'Issues';
     }
   };
 
@@ -67,22 +82,15 @@ console.log('website after adding to dashboard-->', website);
         <div className="mt-4 flex justify-end">
           <div className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center ${
             website.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
-            website.status === 'pending' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' :
+            website.status === 'pending' || website.status === 'embedding' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' :
             'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
           }`}>
             <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
               website.status === 'completed' ? 'bg-green-500' :
-              website.status === 'pending' ? 'bg-amber-500' :
+              website.status === 'pending' || website.status === 'embedding' ? 'bg-amber-500' :
               'bg-red-500'
             }`}></span>
-            {isPending ? (
-              <span className="flex items-center">
-                Processing <Loader2 className="ml-1 h-3 w-3 animate-spin" />
-              </span>
-            ) : (
-              website.status === 'completed' ? 'Active' : 
-              website.status === 'pending' || website.status === 'embedding' ? 'Processing' : 'Issues'
-            )}
+            {getStatusDisplay()}
           </div>
         </div>
       </div>

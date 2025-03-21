@@ -50,41 +50,47 @@ const Dashboard = () => {
     totalChats: 0
   });
   const [pendingWebsites, setPendingWebsites] = useState<number[]>([]);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   const { loading: websitesLoading, execute: executeWebsiteFetch } = useApi({
     showErrorToast: true,
-    errorMessage: "Login failed. Please check your credentials.",
+    errorMessage: "Failed to load websites",
   });
   
   const { loading: statsLoading, execute: executeStatsFetch } = useApi({
     showErrorToast: true,
-    errorMessage: "Login failed. Please check your credentials.",
+    errorMessage: "Failed to load statistics",
   });
   
   // Polling hook for checking website status
-  const { startPolling, stopPolling } = usePolling(
+  const { startPolling, stopPolling, isPolling } = usePolling(
     async () => {
+      // Important: Don't reset the websites array here
       const allWebsites = await executeWebsiteFetch(() => websiteApiService.getWebsites());
-      console.log('allWebsites -->', allWebsites);
-      setWebsites(allWebsites);
+      console.log('allWebsites from polling -->', allWebsites);
       
-      // Check for any pending or embedding websites
-      const pending = allWebsites.filter(
-        website => website.status === 'pending' || website.status === 'embedding'
-      ).map(w => w.id);
-      
-      setPendingWebsites(pending);
-      
-      if (pending.length === 0) {
-        console.log('No pending websites, stopping polling');
-        stopPolling();
+      if (allWebsites) {
+        // Update websites without losing the current display
+        setWebsites(allWebsites);
         
-        if (pendingWebsites.length > 0) {
-          sonnerToast.success("Processing complete", {
-            description: "All websites have been processed",
-            position: "top-right",
-            duration: 5000,
-          });
+        // Check for any pending or embedding websites
+        const pending = allWebsites.filter(
+          website => website.status === 'pending' || website.status === 'embedding'
+        ).map(w => w.id);
+        
+        setPendingWebsites(pending);
+        
+        if (pending.length === 0) {
+          console.log('No pending websites, stopping polling');
+          stopPolling();
+          
+          if (pendingWebsites.length > 0) {
+            sonnerToast.success("Processing complete", {
+              description: "All websites have been processed",
+              position: "top-right",
+              duration: 5000,
+            });
+          }
         }
       }
       
@@ -105,18 +111,20 @@ const Dashboard = () => {
 
   useEffect(() => {
     loadWebsites();
-    handleFetchStats()
+    handleFetchStats();
   }, [isRefreshing]);
 
   const loadWebsites = async () => {
     const data = await executeWebsiteFetch(() => websiteApiService.getWebsites());
     if (data) {
       setWebsites(data);
+      setInitialLoadComplete(true);
       
       // Check for any pending or embedding websites
       const pending = data.filter(
         website => website.status === 'pending' || website.status === 'embedding'
       ).map(w => w.id);
+      
       if (pending.length > 0) {
         setPendingWebsites(pending);
         startPolling();
@@ -129,11 +137,10 @@ const Dashboard = () => {
     const result = await executeStatsFetch(
       () => analyticsApiService.getUserChatStats(),
       {
-        showSuccessToast: true,
+        showSuccessToast: false,
       }
     );
-    console.log('result -->', result);
-    if(!result) return;
+    
     if (result) {
       setStats(result);
     }
@@ -180,7 +187,6 @@ const Dashboard = () => {
   };
   
   const filteredWebsites = websites.filter(website => 
-    // website.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     website.domain.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
@@ -253,35 +259,47 @@ const Dashboard = () => {
           animate="show"
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
-          {websitesLoading && <div className="text-center py-4">Loading websites...</div>}
-          {!websitesLoading && filteredWebsites.map((website) => (
+          {/* Show loading state only on initial load, not during polling */}
+          {websitesLoading && !initialLoadComplete && (
+            <div className="col-span-full text-center py-4">
+              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading websites...</p>
+            </div>
+          )}
+          
+          {/* Always show websites once initial load is complete */}
+          {initialLoadComplete && filteredWebsites.map((website) => (
             <WebsiteCard 
               key={website.id} 
               website={website} 
               isPending={pendingWebsites.includes(website.id)}
+              isPolling={isPolling}
             />
           ))}
           
-          {!websitesLoading && filteredWebsites.length === 0 && <div className="text-center py-4">No websites found</div>}
+          {initialLoadComplete && filteredWebsites.length === 0 && (
+            <div className="col-span-full text-center py-4">No websites found</div>
+          )}
           
           {/* Add New Website Card */}
-          <motion.div
-            variants={fadeIn()}
-            className="border border-dashed rounded-xl flex items-center justify-center p-6 h-64 cursor-pointer hover:border-primary transition-colors"
-            onClick={handleAddWebsite}
-          >
-            <div className="flex flex-col items-center text-center">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                <Plus className="h-6 w-6 text-primary" />
+          {initialLoadComplete && (
+            <motion.div
+              variants={fadeIn()}
+              className="border border-dashed rounded-xl flex items-center justify-center p-6 h-64 cursor-pointer hover:border-primary transition-colors"
+              onClick={handleAddWebsite}
+            >
+              <div className="flex flex-col items-center text-center">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <Plus className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-lg font-medium mb-2">Add New Website</h3>
+                <p className="text-sm text-muted-foreground">Connect a new website to create a chatbot</p>
               </div>
-              <h3 className="text-lg font-medium mb-2">Add New Website</h3>
-              <p className="text-sm text-muted-foreground">Connect a new website to create a chatbot</p>
-            </div>
-          </motion.div>
+            </motion.div>
+          )}
         </motion.div>
       </main>
       
-
       <AddWebsiteModal 
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
