@@ -16,6 +16,7 @@ interface WebsiteCardProps {
     requestsToday: number;
     requestsTotal: number;
     api_secret: string;
+    statusMessage?: string;
   };
   isPending?: boolean;
   isPolling?: boolean;
@@ -149,6 +150,13 @@ console.log('website after adding to dashboard-->', website);
               </div>
             </div>
           </div>
+        </div>
+      )}
+      
+      {website.status === 'failed' && website.statusMessage && (
+        <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-md text-sm">
+          <p className="font-medium mb-1">Processing Failed</p>
+          <p>{website.statusMessage}</p>
         </div>
       )}
       

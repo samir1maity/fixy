@@ -56,28 +56,49 @@ export async function storeEmbedding(chunkId: string, embedding: any): Promise<v
 }
 
 export async function processUnembeddedChunks(batchSize: number = 10): Promise<number> {
-  const chunks = await prisma.chunk.findMany({
-    where: {
-      Embeddings: {
-        none: {}
-      }
-    },
-    take: batchSize
-  });
-  
-  let processedCount = 0;
-  
-  for (const chunk of chunks) {
-    try {
-      const embedding = await getEmbedding(chunk.text);
-      await storeEmbedding(chunk.id, embedding);
-      processedCount++;
-    } catch (error) {
-      console.error(`Error processing chunk ${chunk.id}:`, error);
+  try {
+    const chunks = await prisma.chunk.findMany({
+      where: {
+        Embeddings: {
+          none: {}
+        }
+      },
+      take: batchSize
+    });
+    
+    if (chunks.length === 0) {
+      return 0;
     }
+    
+    let processedCount = 0;
+    
+    for (const chunk of chunks) {
+      try {
+        if (!chunk.text || chunk.text.trim().length < 10) {
+          console.warn(`Skipping chunk ${chunk.id} due to insufficient text`);
+          continue;
+        }
+        
+        const embedding = await getEmbedding(chunk.text);
+        
+        if (!embedding || embedding.length === 0) {
+          console.warn(`Failed to generate embedding for chunk ${chunk.id}`);
+          continue;
+        }
+        
+        await storeEmbedding(chunk.id, embedding);
+        processedCount++;
+      } catch (error) {
+        console.error(`Error processing chunk ${chunk.id}:`, error);
+        // Continue with other chunks even if one fails
+      }
+    }
+    
+    return processedCount;
+  } catch (error) {
+    console.error("Error in processUnembeddedChunks:", error);
+    return 0;
   }
-  
-  return processedCount;
 }
 
 export async function retrieveSimilarChunks(

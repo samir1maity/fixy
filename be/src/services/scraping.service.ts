@@ -163,7 +163,7 @@ export async function scrapeWebsiteRecursively(
   rootUrl: string, 
   websiteId: number,
   maxDepth: number = 3, 
-  maxPages: number = 100
+  maxPages: number = 25
 ): Promise<void> {
   const visitedUrls = new Set<string>();
   const urlQueue: Array<{url: string, depth: number}> = [];
@@ -173,99 +173,113 @@ export async function scrapeWebsiteRecursively(
   const rootDomain = extractDomain(normalizedRootUrl);
   urlQueue.push({url: normalizedRootUrl, depth: 0});
   
-  // Update website status to processing Todo: Implement this
+  // Update website status to processing
   await prisma.website.update({
     where: { id: websiteId },
     data: { status: 'pending' }
   });
   
   let pagesProcessed = 0;
+  let successfulScrapes = 0;
   
-  // Process URLs until queue is empty or limits are reached
-  while (urlQueue.length > 0 && pagesProcessed < maxPages) {
-    const {url, depth} = urlQueue.shift()!;
-    
-    // Skip if already visited or exceeds max depth
-    if (visitedUrls.has(url) || depth > maxDepth) {
-      continue;
-    }
-    
-    // console.log(`Scraping ${url} (depth: ${depth})`);
-    visitedUrls.add(url);
-    
-    try {
-      // Scrape the current page
-      const scrapedData = await scrapeGenericWebsite(url);
+  try {
+    // Process URLs until queue is empty or limits are reached
+    while (urlQueue.length > 0 && pagesProcessed < maxPages) {
+      const {url, depth} = urlQueue.shift()!;
       
-      if (scrapedData.content) {
-        // Store page in database Todo: Implement this
-        const page = await prisma.page.create({
-          data: {
-            websiteId,
-            url,
-            title: scrapedData.title
+      // Skip if already visited or exceeds max depth
+      if (visitedUrls.has(url) || depth > maxDepth) {
+        continue;
+      }
+      
+      visitedUrls.add(url);
+      
+      try {
+        // Scrape the current page
+        const scrapedData = await scrapeGenericWebsite(url);
+        
+        if (scrapedData.content && scrapedData.content.length > 100) {
+          // Store page in database
+          const page = await prisma.page.create({
+            data: {
+              websiteId,
+              url,
+              title: scrapedData.title || url
+            }
+          });
+          
+          // Process content into chunks
+          const chunks = chunkContent(scrapedData.content);
+
+          // Store chunks
+          if (chunks.length > 0) {
+            for (let i = 0; i < chunks.length; i++) {
+              await prisma.chunk.create({
+                data: {
+                  pageId: page.id,
+                  chunkIndex: i,
+                  text: chunks[i].text,
+                }
+              });
+            }
+            
+            successfulScrapes++;
+          }
+          
+          pagesProcessed++;
+        }
+        
+        // Process internal links
+        const internalLinks = processInternalLinks(
+          // Check if links exists and has the internal property
+          Array.isArray(scrapedData.links) 
+            ? [] 
+            : (scrapedData.links?.internal || []), 
+          url, 
+          rootDomain
+        );
+        
+        // Add new internal links to queue
+        internalLinks.forEach(link => {
+          if (!visitedUrls.has(link)) {
+            urlQueue.push({url: link, depth: depth + 1});
           }
         });
         
-        // Process content into chunks
-        const chunks = chunkContent(scrapedData.content);
-
-        // console.log("chunks", chunks);
-
-        // Store chunks
-        for (let i = 0; i < chunks.length; i++) {
-
-          const temp = {
-            chunkIndex: i,
-            text: chunks[i],
-            pageId: page.id,
-            // tokenCount: estimateTokens(chunks[i]) // TODO: Implement this
-          }
-
-          // console.log("temp", temp);
-          // Todo: Implement this
-          await prisma.chunk.create({
-            data: {
-              pageId: page.id,
-              chunkIndex: i,
-              text: chunks[i].text,
-              // tokenCount: estimateTokens(chunks[i]) // TODO: Implement this
-            }
-          });
-        }
+        // Optional: Add a small delay to be polite to the server
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
-        pagesProcessed++;
+      } catch (error) {
+        console.error(`Error processing ${url}:`, error);
+        // Continue with other URLs even if one fails
       }
-      
-      // Process internal links
-      const internalLinks = processInternalLinks(
-        //@ts-ignore
-        scrapedData.links.internal, 
-        url, 
-        rootDomain
-      );
-      
-      // Add new internal links to queue
-      internalLinks.forEach(link => {
-        if (!visitedUrls.has(link)) {
-          urlQueue.push({url: link, depth: depth + 1});
+    }
+    
+    // Check if we successfully scraped any content
+    if (successfulScrapes === 0) {
+      // No successful scrapes, mark as failed
+      await prisma.website.update({
+        where: { id: websiteId },
+        data: { status: 'failed' }
+      });
+      throw new Error("We couldn't extract content from this website. The site may have content protection, use JavaScript rendering, or have a structure our system can't process. Please try a different website or contact support.");
+    } else {
+      // Update website status to embedding to start the embedding process
+      await prisma.website.update({
+        where: { id: websiteId },
+        data: { 
+          status: 'embedding',
+          lastCrawledAt: new Date()
         }
       });
-      
-      // Optional: Add a small delay to be polite to the server
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-    } catch (error) {
-      console.error(`Error processing ${url}:`, error);
     }
+  } catch (error) {
+    console.error(`Error in scraping process for website ${websiteId}:`, error);
+    // Mark as failed if any error occurs in the overall process
+    await prisma.website.update({
+      where: { id: websiteId },
+      data: { status: 'failed' }
+    });
+    throw error; // Propagate the error to be caught by the controller
   }
-  
-  // Update website status to completed Todo: Implement this
-  await prisma.website.update({
-    where: { id: websiteId },
-    data: { 
-      status: 'completed',
-      lastCrawledAt: new Date()
-    }
-  });
 }

@@ -21,7 +21,8 @@ export const registerWebsite = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Website registration error:', error);
-    res.status(500).json({ error: 'Failed to register website' });
+    const errorMessage = error instanceof Error ? error.message : 'Failed to register website';
+    res.status(400).json({ error: errorMessage });
   }
 };
 
@@ -35,7 +36,19 @@ export const getWebsites = async (req: Request, res: Response) => {
     }
     
     const websites = await getWebsitesService(customerId);
-    res.json(websites);
+    
+    // For each failed website, add a generic error message if not already present
+    const websitesWithMessages = websites.map(website => {
+      if (website.status === 'failed') {
+        return {
+          ...website,
+          statusMessage: "Processing failed. Please try a different website or contact support."
+        };
+      }
+      return website;
+    });
+    
+    res.json(websitesWithMessages);
   } catch (error) { 
     console.error('Get websites error:', error);
     res.status(500).json({ error: 'Failed to get websites' });
@@ -50,6 +63,12 @@ export const getWebsiteInfo = async (req: Request, res: Response) => {
       return;
     }
     const website = await getWebsiteInfoService(id);
+    
+    // Add a generic error message if the website failed and no message is present
+    if (website && website.status === 'failed' && !website.statusMessage) {
+      website.statusMessage = "Processing failed. Please try a different website or contact support.";
+    }
+    
     res.json(website);
   } catch (error) {
     console.error('Get website info error:', error);  
