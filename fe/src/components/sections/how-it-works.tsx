@@ -1,28 +1,28 @@
 
 import { motion } from 'framer-motion';
 import { fadeIn, slideIn } from '@/lib/motion';
-import { ArrowRight, CheckCircle, Link, MessageSquare } from 'lucide-react';
+import { ArrowRight, CheckCircle, MessageSquare, Globe } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
 const steps = [
   {
     number: "01",
-    icon: <Link className="w-5 h-5" />,
-    title: "Enter Your Website URL",
-    description: "Provide your website address and Fixy will automatically scan and analyze your content."
+    icon: <Globe className="w-5 h-5" />,
+    title: "Add Your Website",
+    description: "Enter your website URL to create a new chatbot."
   },
   {
     number: "02",
     icon: <CheckCircle className="w-5 h-5" />,
-    title: "Customize Your Chatbot",
-    description: "Personalize the appearance and behavior of your chatbot to match your brand identity."
+    title: "Test Your Chatbot",
+    description: "Test your chatbot with the provided interface to ensure it meets your needs."
   },
   {
     number: "03",
     icon: <MessageSquare className="w-5 h-5" />,
-    title: "Install & Engage",
-    description: "Add a simple code snippet to your website and start engaging with your visitors instantly."
+    title: "Use API Secret",
+    description: "Use the API secret to integrate our API and enhance your chatbot's functionality."
   }
 ];
 

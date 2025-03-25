@@ -103,7 +103,7 @@ const HeroSection = () => {
                   
                   <ChatMessage 
                     isBot={true}
-                    message="We offer three pricing tiers: Free, Pro ($29/mo), and Enterprise (custom pricing). The Pro plan includes up to 1,000 chats per month and advanced customization options."
+                    message="Our service provides a seamless way to engage with your visitors. Create a personalized chatbot that understands your content and enhances user interaction, all at no cost."
                   />
 
                   <motion.div

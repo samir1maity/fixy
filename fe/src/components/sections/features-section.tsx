@@ -24,16 +24,6 @@ const features = [
     description: "Advanced AI generates accurate, natural responses based on your website content."
   },
   {
-    icon: <Code className="w-5 h-5" />,
-    title: "Easy Installation",
-    description: "Install with a simple code snippet or use our plugins for popular platforms."
-  },
-  {
-    icon: <Palette className="w-5 h-5" />,
-    title: "Customizable Design",
-    description: "Fully customize the chatbot appearance to match your brand identity and website design."
-  },
-  {
     icon: <LineChart className="w-5 h-5" />,
     title: "Analytics Dashboard",
     description: "Track user interactions, popular questions, and conversion metrics."
@@ -43,16 +33,6 @@ const features = [
     title: "Data Privacy",
     description: "Enterprise-grade security with data encryption and GDPR compliance."
   },
-  {
-    icon: <Bot className="w-5 h-5" />,
-    title: "Multi-language Support",
-    description: "Communicate with your visitors in over 30 languages automatically."
-  },
-  {
-    icon: <Zap className="w-5 h-5" />,
-    title: "24/7 Availability",
-    description: "Provide instant responses to customer inquiries around the clock."
-  }
 ];
 
 const FeaturesSection = () => {
