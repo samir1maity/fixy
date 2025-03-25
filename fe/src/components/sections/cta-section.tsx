@@ -41,7 +41,7 @@ const CTASection = () => {
               <Button 
                 variant="outline" 
                 size="lg"
-                className="border-white border-2 text-white hover:bg-white/10 transition-colors min-w-[180px] rounded-xl font-medium"
+                className="border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 min-w-[180px] rounded-xl"
               >
                 Watch Demo
               </Button>

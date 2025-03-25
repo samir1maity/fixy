@@ -98,7 +98,7 @@ const HeroSection = () => {
                   
                   <ChatMessage 
                     isBot={false}
-                    message="What are your pricing plans?"
+                    message="What are your provides?"
                   />
                   
                   <ChatMessage 
