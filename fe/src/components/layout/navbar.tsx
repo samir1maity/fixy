@@ -48,8 +48,6 @@ const Navbar = () => {
         <nav className="hidden md:flex items-center space-x-8">
           <NavLink href="#features">Features</NavLink>
           <NavLink href="#how-it-works">How It Works</NavLink>
-          <NavLink href="#testimonials">Testimonials</NavLink>
-          <NavLink href="#pricing">Pricing</NavLink>
           <div>
           <Link to="/login">
             <Button 
@@ -100,18 +98,6 @@ const Navbar = () => {
               onClick={() => setMobileMenuOpen(false)}
             >
               How It Works
-            </MobileNavLink>
-            <MobileNavLink 
-              href="#testimonials" 
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Testimonials
-            </MobileNavLink>
-            <MobileNavLink 
-              href="#pricing" 
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Pricing
             </MobileNavLink>
             <div className="flex flex-col sm:flex-row gap-2 pt-2">
               <Link to="/login" className="w-full" onClick={() => setMobileMenuOpen(false)}>
