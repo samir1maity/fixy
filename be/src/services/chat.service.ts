@@ -5,7 +5,6 @@ import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/ge
 const prisma = new PrismaClient();
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY as string;
 
-// Initialize Gemini
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 export async function generateChatResponse(
@@ -17,7 +16,6 @@ export async function generateChatResponse(
   sources: Array<{ url: string; title: string; relevance: number }>; 
   followupQuestions?: string[];
 }> {
-  // Retrieve relevant chunks with similarity scores
   const relevantChunks = await retrieveSimilarChunks(query, websiteId, 3);
   
   if (relevantChunks.length === 0) {
@@ -38,12 +36,8 @@ export async function generateChatResponse(
     relevance: Math.round(chunk.similarity * 100)
   }));
 
-  console.log('chunks for normalized', chunks);
-  
   // Sort chunks by relevance
   chunks.sort((a, b) => b.relevance - a.relevance);
-
-  console.log('chunks for sorted', chunks);
   
   // Filter out low-relevance chunks (optional threshold)
   const highRelevanceChunks = chunks.filter(chunk => chunk.relevance > 60);

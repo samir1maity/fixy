@@ -9,11 +9,9 @@ import analyticsRouter from "./routes/analytics.route.js";
 const app = express();
 app.use(express.json());
 
-app.use(cors());
-
 app.use(
   cors({
-    origin: "https://fixy.iamsamir.space", 
+    origin: ["https://fixy.iamsamir.space", "http://localhost:8080"], 
     allowedHeaders: ["Content-Type", "Authorization"], 
     credentials: true, 
   })

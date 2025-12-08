@@ -13,7 +13,7 @@ export const registerWebsite = async (req: Request, res: Response) => {
     }
     
     const websiteId = await registerWebsiteService(customerId, url);
-    console.log('websiteId -->', websiteId);
+    
     res.status(201).json({
       websiteId,
       status: 'pending',
@@ -38,7 +38,7 @@ export const getWebsites = async (req: Request, res: Response) => {
     const websites = await getWebsitesService(customerId);
     
     // For each failed website, add a generic error message if not already present
-    const websitesWithMessages = websites.map(website => {
+    const websitesWithMessages = websites.map((website : any) => {
       if (website.status === 'failed') {
         return {
           ...website,

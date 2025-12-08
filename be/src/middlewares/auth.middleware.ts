@@ -1,10 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../configs/db.js';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-
-// Extend Express Request type to include user
+import config from '../configs/config.js';
 declare global {
   namespace Express {
     interface Request {
@@ -21,11 +18,9 @@ declare global {
 
 /**
  * Middleware to authenticate requests using JWT
- * Adds user object to request if authentication is successful
  */
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Get token from Authorization header
     const authHeader = req.headers.authorization;
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -35,10 +30,8 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     
     const token = authHeader.split(' ')[1];
     
-    // Verify token
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+    const decoded = jwt.verify(token, config.auth.jwt) as { userId: string };
     
-    // Check if user exists
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
       select: { id: true, email: true }
@@ -49,7 +42,6 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
       return;
     }
     
-    // Add user to request object
     req.user = {
       userId: user.id,
       email: user.email
@@ -59,58 +51,21 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
   } catch (error) {
     if (error instanceof jwt.JsonWebTokenError) {
       res.status(401).json({ error: 'Invalid authentication token' });
+      return;
     }
     
     if (error instanceof jwt.TokenExpiredError) {
       res.status(401).json({ error: 'Authentication token expired' });
+      return;
     }
     
     console.error('Authentication error:', error);
-      res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
-/**
- * Optional authentication middleware
- * Adds user to request if token is valid, but doesn't require authentication
- */
-export const optionalAuth = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const authHeader = req.headers.authorization;
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return next(); // Continue without authentication
-    }
-    
-    const token = authHeader.split(' ')[1];
-    
-    // Verify token
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
-    
-    // Check if user exists
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      select: { id: true, email: true }
-    });
-    
-    if (user) {
-      // Add user to request object
-      req.user = {
-        userId: user.id,
-        email: user.email
-      };
-    }
-    
-    next();
-  } catch (error) {
-    // Continue without authentication if token is invalid
-    next();
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 /**
  * Role-based authorization middleware
- * Requires the authenticate middleware to be used first
  */
 export const authorize = (roles: string) => {
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -120,7 +75,6 @@ export const authorize = (roles: string) => {
         return;
       }
       
-      // Get user with role
       const user = await prisma.user.findUnique({
         where: { id: req.user.userId },
         select: { id: true, role: true }
@@ -131,7 +85,6 @@ export const authorize = (roles: string) => {
         return;
       }
       
-      // Check if user has required role
       if (!roles.includes(user.role)) {
         res.status(403).json({ error: 'Insufficient permissions' });
         return;

@@ -5,7 +5,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 export async function registerWebsite(customerId: string, url: string): Promise<number> {
   try {
-    // Validate URL
     let validUrl: URL;
     try {
       validUrl = new URL(url);

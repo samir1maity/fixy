@@ -1,6 +1,5 @@
 export function chunkContent(
     content: string,
-    // metadata: any,
     chunkSize: number = 800
   ): any[] {
     const paragraphs = content.split(/\n\s*\n/);
@@ -8,7 +7,7 @@ export function chunkContent(
     let currentChunk = "";
   
     for (const paragraph of paragraphs) {
-      if (paragraph.trim().length === 0) continue; // Skip empty paragraphs
+      if (paragraph.trim().length === 0) continue;
   
       if (
         currentChunk.length + paragraph.length > chunkSize &&
@@ -32,10 +31,6 @@ export function chunkContent(
         currentChunk += (currentChunk ? "\n\n" : "") + paragraph;
       }
     }
-  
-    // if (currentChunk.trim().length > 0) {
-    //   chunks.push({ text: currentChunk.trim(), metadata: { ...metadata } });
-    // }
   
     return chunks;
 }

@@ -1,56 +1,15 @@
-import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
+import config from '../configs/config.js';
+import * as userValidation from '../zod/user.js'
+import * as userTypes from '../types/user.js'
+import { prisma } from '../configs/db.js'
 
-const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-const RESET_TOKEN_EXPIRY = 3600000; // 1 hour in milliseconds
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  password: string; 
-}
-
-// Zod validation schemas
-const signupSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-});
-
-const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(1, 'Password is required'),
-});
-
-const forgotPasswordSchema = z.object({
-  email: z.string().email('Invalid email address'),
-});
-
-const resetPasswordSchema = z.object({
-  token: z.string(),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-});
-
-const updateProfileSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters').optional(),
-  email: z.string().email('Invalid email address').optional(),
-  currentPassword: z.string().optional(),
-  newPassword: z.string().min(8, 'Password must be at least 8 characters').optional(),
-});
-
-/**
- * User signup
- * @param userData - User data
- * @returns User and token
-*/
-export async function signup(userData: z.infer<typeof signupSchema>): Promise<{ user: Omit<User, 'password'>, token: string }> {
-  const validatedData = signupSchema.parse(userData);
+export async function signup(userData: z.infer<typeof userValidation.signupSchema>): Promise<{ user: Omit<userTypes.User, 'password'>, token: string }> {
+  const validatedData = userValidation.signupSchema.parse(userData);
   
   const existingUser = await prisma.user.findUnique({
     where: { email: validatedData.email }
@@ -70,19 +29,14 @@ export async function signup(userData: z.infer<typeof signupSchema>): Promise<{ 
     },
   });
   
-  const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
+  const token = jwt.sign({ userId: user.id }, config.auth.jwt , { expiresIn: '7d' });
   
   const { password, ...userWithoutPassword } = user;
   return { user: userWithoutPassword, token };
 }
 
-/**
- * User login
- * @param credentials - User credentials
- * @returns User and token
-*/
-export async function login(credentials: z.infer<typeof loginSchema>): Promise<{ user: Omit<User, 'password'>, token: string }> {
-  const validatedData = loginSchema.parse(credentials);
+export async function login(credentials: z.infer<typeof userValidation.loginSchema>): Promise<{ user: Omit<userTypes.User, 'password'>, token: string }> {
+  const validatedData = userValidation.loginSchema.parse(credentials);
   
   const user = await prisma.user.findUnique({
     where: { email: validatedData.email }
@@ -98,19 +52,14 @@ export async function login(credentials: z.infer<typeof loginSchema>): Promise<{
     throw new Error('Invalid email or password');
   }
   
-  const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
+  const token = jwt.sign({ userId: user.id }, config.auth.jwt, { expiresIn: '7d' });
   
   const { password, ...userWithoutPassword } = user;
   return { user: userWithoutPassword, token };
 }
 
-/**
- * Forgot password
- * @param data - Forgot password data
- * @returns Message
-*/
-export async function forgotPassword(data: z.infer<typeof forgotPasswordSchema>): Promise<{ message: string }> {
-  const validatedData = forgotPasswordSchema.parse(data);
+export async function forgotPassword(data: z.infer<typeof userValidation.forgotPasswordSchema>): Promise<{ message: string }> {
+  const validatedData = userValidation.forgotPasswordSchema.parse(data);
   
   const user = await prisma.user.findUnique({
     where: { email: validatedData.email }
@@ -127,7 +76,7 @@ export async function forgotPassword(data: z.infer<typeof forgotPasswordSchema>)
     where: { id: user.id },
     data: {
       resetToken: resetTokenHash,
-      resetTokenExpiry: new Date(Date.now() + RESET_TOKEN_EXPIRY),
+      resetTokenExpiry: new Date(Date.now() + config.auth.token_expiry),
     },
   });
   
@@ -168,13 +117,8 @@ export async function forgotPassword(data: z.infer<typeof forgotPasswordSchema>)
   return { message: 'If an account with that email exists, a password reset link has been sent' };
 }
 
-/**
- * Reset password
- * @param data - Reset password data
- * @returns Message
-*/
-export async function resetPassword(data: z.infer<typeof resetPasswordSchema>): Promise<{ message: string }> {
-  const validatedData = resetPasswordSchema.parse(data);
+export async function resetPassword(data: z.infer<typeof userValidation.resetPasswordSchema>): Promise<{ message: string }> {
+  const validatedData = userValidation.resetPasswordSchema.parse(data);
   
   const resetTokenHash = crypto.createHash('sha256').update(validatedData.token).digest('hex');
   
@@ -205,12 +149,7 @@ export async function resetPassword(data: z.infer<typeof resetPasswordSchema>): 
   return { message: 'Password has been reset successfully' };
 }
 
-/**
- * Get user profile
- * @param userId - User ID
- * @returns User without password
-*/
-export async function getUserProfile(userId: string): Promise<Omit<User, 'password'>> {
+export async function getUserProfile(userId: string): Promise<Omit<userTypes.User, 'password'>> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
   });
@@ -223,17 +162,11 @@ export async function getUserProfile(userId: string): Promise<Omit<User, 'passwo
   return userWithoutPassword;
 }
 
-/**
- * Update user profile
- * @param userId - User ID
- * @param data - Update profile data
- * @returns User without password
-*/
 export async function updateProfile(
   userId: string, 
-  data: z.infer<typeof updateProfileSchema>
-): Promise<Omit<User, 'password'>> {
-  const validatedData = updateProfileSchema.parse(data);
+  data: z.infer<typeof userValidation.updateProfileSchema>
+): Promise<Omit<userTypes.User, 'password'>> {
+  const validatedData = userValidation.updateProfileSchema.parse(data);
   
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -272,12 +205,6 @@ export async function updateProfile(
   return userWithoutPassword;
 }
 
-/**
- * Delete user account
- * @param userId - User ID
- * @param password - Password
- * @returns Message
-*/
 export async function deleteAccount(userId: string, password: string): Promise<{ message: string }> {
   const user = await prisma.user.findUnique({
     where: { id: userId },

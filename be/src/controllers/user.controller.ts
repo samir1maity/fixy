@@ -2,10 +2,6 @@ import { Request, Response, NextFunction } from 'express';
 import * as userService from '../services/user.service.js';
 import { prisma } from '../configs/db.js';
 
-/**
- * User signup controller
- * POST /api/users/signup
- */
 export const signup = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password, name } = req.body;
@@ -30,10 +26,7 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
   }
 };
 
-/**
- * User login controller
- * POST /api/users/login
- */
+
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password } = req.body;
@@ -58,11 +51,6 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
   }
 };
 
-/**
- * Get current user controller
- * GET /api/users/me
- * Requires authentication
- */
 export const getCurrentUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     if (!req.user) {
@@ -77,10 +65,6 @@ export const getCurrentUser = async (req: Request, res: Response, next: NextFunc
   }
 };
 
-/**
- * Forgot password controller
- * POST /api/users/forgot-password
- */
 export const forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email } = req.body;
@@ -99,10 +83,6 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
   }
 };
 
-/**
- * Reset password controller
- * POST /api/users/reset-password
- */
 export const resetPassword = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { token, password } = req.body;
@@ -123,11 +103,6 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
   }
 };
 
-/**
- * Get user profile controller
- * GET /api/users/profile
- * Requires authentication
- */
 export const getProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
     if (!req.user) {
@@ -151,11 +126,6 @@ export const getProfile = async (req: Request, res: Response, next: NextFunction
   }
 };
 
-/**
- * Update user profile controller
- * PUT /api/users/profile
- * Requires authentication
- */
 export const updateProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
     if (!req.user) {
@@ -194,11 +164,6 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
   }
 };
 
-/**
- * Delete user account controller
- * DELETE /api/users/account
- * Requires authentication
- */
 export const deleteAccount = async (req: Request, res: Response, next: NextFunction) => {
   try {
     if (!req.user) {
@@ -233,17 +198,8 @@ export const deleteAccount = async (req: Request, res: Response, next: NextFunct
   }
 };
 
-/**
- * Get all users controller (admin only)
- * GET /api/users
- * Requires authentication and admin role
- */
 export const getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // This route is protected by the authorize middleware
-    // so we know the user has admin privileges
-    
-    // Implement pagination
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     
@@ -276,16 +232,8 @@ export const getAllUsers = async (req: Request, res: Response, next: NextFunctio
   }
 };
 
-/**
- * Get user details controller (resource owner or admin)
- * GET /api/users/:userId/details
- * Requires authentication and resource ownership
- */
 export const getUserDetails = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    // This route is protected by the isResourceOwner middleware
-    // so we know the user is accessing their own data
-    
+  try { 
     const userId = req.params.userId;
     
     const userDetails = await userService.getUserProfile(userId);
