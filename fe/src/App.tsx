@@ -14,6 +14,7 @@ const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
 const ChatPage = lazy(() => import("./pages/ChatPage"));
 const Profile = lazy(() => import("./pages/Profile"));
+const ApiDocs = lazy(() => import("./pages/ApiDocs"));
 
 function App() {
   return (
@@ -74,6 +75,16 @@ function App() {
                 <ProtectedRoute>
                   <Profile />
                 </ProtectedRoute>
+              }
+            />
+
+            {/* Public API docs route */}
+            <Route
+              path="/docs"
+              element={
+                <PublicRoute>
+                  <ApiDocs />
+                </PublicRoute>
               }
             />
 

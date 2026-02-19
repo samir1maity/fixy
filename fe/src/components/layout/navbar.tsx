@@ -46,8 +46,9 @@ const Navbar = () => {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-8">
-          <NavLink href="#features">Features</NavLink>
-          <NavLink href="#how-it-works">How It Works</NavLink>
+          <Link to="/docs" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white font-medium">
+            API Docs
+          </Link>
           <div>
           <Link to="/login">
             <Button 
@@ -87,18 +88,13 @@ const Navbar = () => {
           className="md:hidden container py-4 mt-2"
         >
           <nav className="flex flex-col space-y-4">
-            <MobileNavLink 
-              href="#features" 
+            <Link 
+              to="/docs" 
+              className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white font-medium px-2 py-1"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Features
-            </MobileNavLink>
-            <MobileNavLink 
-              href="#how-it-works" 
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              How It Works
-            </MobileNavLink>
+              API Docs
+            </Link>
             <div className="flex flex-col sm:flex-row gap-2 pt-2">
               <Link to="/login" className="w-full" onClick={() => setMobileMenuOpen(false)}>
                 <Button 
