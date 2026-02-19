@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../configs/db.js';
 import { retrieveSimilarChunks } from './embedding.service.js';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
-
-const prisma = new PrismaClient();
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY as string;
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);

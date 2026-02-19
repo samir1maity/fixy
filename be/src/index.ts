@@ -1,17 +1,19 @@
 import express from "express";
 import "dotenv/config";
+import { connectDb } from "./configs/db.js";
 import chatRouter from "./routes/chat.route.js";
 import userRoutes from './routes/user.route.js';
 import cors from 'cors';
 import websiteRouter from "./routes/website.route.js";
 import analyticsRouter from "./routes/analytics.route.js";
+import config from "./configs/config.js"
 
 const app = express();
 app.use(express.json());
 
 app.use(
   cors({
-    origin: ["https://fixy.iamsamir.space", "http://localhost:8080"], 
+    origin: [config.frontend.baseUrl], 
     allowedHeaders: ["Content-Type", "Authorization"], 
     credentials: true, 
   })
@@ -28,6 +30,14 @@ app.use('/api/v1/analytics', analyticsRouter);
 
 
 const PORT = process.env.PORT || 3111;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+
+connectDb()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("Database connection failed:", err);
+    process.exit(1);
+  });
