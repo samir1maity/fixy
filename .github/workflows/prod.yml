@@ -23,7 +23,7 @@ jobs:
 
             export NVM_DIR="/root/.nvm"
             . "$NVM_DIR/nvm.sh"
-            nvm use 23.11.0
+            nvm use 22.12.0
 
             cd ${{ secrets.APP_DIR }}
             git fetch origin main
