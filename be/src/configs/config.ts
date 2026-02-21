@@ -5,6 +5,9 @@ const config: any = {
     },
     frontend : {
         baseUrl : process.env.FE_BASE_URL
+    },
+    ai: {
+        api_key : process.env.GEMINI_API_KEY as string
     }
 } 
 

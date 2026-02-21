@@ -29,7 +29,7 @@ const ProfileDropdown = ({user, onLogout}: {user: User, onLogout: () => void}) =
   };
 
   return (
-    <div className="relative z-50" ref={dropdownRef}>
+    <div className="relative" ref={dropdownRef}>
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
