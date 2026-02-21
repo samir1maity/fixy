@@ -1,21 +1,23 @@
+name: Deploy VPS
+
 on:
   push:
-    paths:
-      - 'fe/**'
     branches: ["main"]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: SSH Deploy
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.SERVER_HOST }} 
+          host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-
           script: |
             set -e
 
@@ -24,9 +26,18 @@ jobs:
             nvm use 23.11.0
 
             cd ${{ secrets.APP_DIR }}
-            git pull origin main
+            git fetch origin main
+            git reset --hard origin/main
+
             cd fe
             npm ci
             npm run build
+            cd ..
 
+            cd be
+            npm ci
+            npm run build
+            cd ..
 
+            pm2 restart fixy-backend --update-env
+            pm2 save
