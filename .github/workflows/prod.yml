@@ -20,11 +20,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             set -e
-
-            export NVM_DIR="/root/.nvm"
-            . "$NVM_DIR/nvm.sh"
-            nvm use 22.12.0
-
+            
             cd ${{ secrets.APP_DIR }}
             git fetch origin main
             git reset --hard origin/main
