@@ -2,25 +2,33 @@ import axios from "axios";
 import * as cheerio from "cheerio";
 import { prisma } from "../configs/db.js";
 import { chunkContent } from "./contentProcessor.service.js";
+import puppeteer from "puppeteer";
 
-export async function scrapeGenericWebsite(url: string) {
+// Add a flag to determine if we should use headless browser
+export async function scrapeGenericWebsite(url: string, useHeadlessBrowser: boolean = true) {
   try {
-    // Fetch the page with a reasonable timeout
-    const { data } = await axios.get(url, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-        Accept: "text/html,application/xhtml+xml,application/xml",
-      },
-      timeout: 10000,
-    });
+    let data: string;
+    
+    // Default to using Puppeteer for all sites
+    if (useHeadlessBrowser) {
+      // Use Puppeteer for JavaScript-rendered content
+      data = await scrapeWithPuppeteer(url);
+    } else {
+      // Use traditional axios for static content
+      const response = await axios.get(url, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+          Accept: "text/html,application/xhtml+xml,application/xml",
+        },
+        timeout: 15000,
+      });
+      data = response.data;
+    }
 
     const $ = cheerio.load(data);
 
     // Remove script, style, and other non-content elements
-    $(
-      'script, style, noscript, iframe, img, svg, canvas, nav, footer, header, [role="banner"], [role="navigation"]'
-    ).remove();
+    $('script, style, noscript, iframe, img, svg, canvas, nav, footer, header, [role="banner"], [role="navigation"]').remove();
 
     // Extract title
     const title = $("title").text().trim() || $("h1").first().text().trim();
@@ -30,16 +38,9 @@ export async function scrapeGenericWebsite(url: string) {
 
     // Try to find main content area using common selectors
     const contentSelectors = [
-      "main",
-      "article",
-      "#content",
-      ".content",
-      ".post",
-      ".article",
-      '[role="main"]',
-      ".main-content",
-      ".post-content",
-      ".entry-content",
+      "main", "article", "#content", ".content", ".post", ".article", 
+      '[role="main"]', ".main-content", ".post-content", ".entry-content",
+      "#root", ".container", ".app"
     ];
 
     // Try each selector until we find content
@@ -52,8 +53,7 @@ export async function scrapeGenericWebsite(url: string) {
 
     // If no content found with specific selectors, extract from body with structure
     if (!mainContent || mainContent.length < 100) {
-      // Get all paragraphs and headings
-      $("p, h1, h2, h3, h4, h5, h6, li, td, th, blockquote").each((_, el) => {
+      $("p, h1, h2, h3, h4, h5, h6, li, td, th, blockquote, div").each((_, el) => {
         const text = $(el).text().trim();
         if (text) {
           mainContent += text + "\n\n";
@@ -73,12 +73,10 @@ export async function scrapeGenericWebsite(url: string) {
       if (href) links.push(href);
     });
 
-    // console.log("links", links);
-
     let externalLinks: Set<string> = new Set();
     let internalLinks: Set<string> = new Set();
 
-    links.map((link) => {
+    links.forEach((link) => {
       if (link.startsWith("http") || link.startsWith("https")) {
         externalLinks.add(link);
       } else {
@@ -105,11 +103,72 @@ export async function scrapeGenericWebsite(url: string) {
   }
 }
 
+// Scrape with Puppeteer for JavaScript-rendered sites
+async function scrapeWithPuppeteer(url: string): Promise<string> {
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+  });
+  
+  try {
+    const page = await browser.newPage();
+    
+    // Set viewport
+    await page.setViewport({ width: 1280, height: 800 });
+    
+    // Set user agent
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+    
+    // Navigate to the page
+    await page.goto(url, { 
+      waitUntil: 'networkidle2',
+      timeout: 30000
+    });
+    
+    // Wait for React to render content
+    await page.waitForSelector('#root, .app, .container, main, article, #__next, [data-reactroot], .react-app', { 
+      timeout: 30000 
+    }).catch(() => console.log('No common React selectors found, continuing anyway'));
+    
+    // Scroll down to trigger lazy loading
+    await autoScroll(page);
+    
+    // Wait additional time for any lazy-loaded content
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    
+    // Get the page content
+    const content = await page.content();
+    
+    return content;
+  } finally {
+    await browser.close();
+  }
+}
+
+// Helper function to scroll down the page to trigger lazy loading
+async function autoScroll(page: any) {
+  await page.evaluate(async () => {
+    await new Promise<void>((resolve) => {
+      let totalHeight = 0;
+      const distance = 100;
+      const timer = setInterval(() => {
+        const scrollHeight = document.body.scrollHeight;
+        window.scrollBy(0, distance);
+        totalHeight += distance;
+
+        if (totalHeight >= scrollHeight) {
+          clearInterval(timer);
+          resolve();
+        }
+      }, 100);
+    });
+  });
+}
+
 // Helper function to normalize URLs
 function normalizeUrl(url: string): string {
   try {
     const urlObj = new URL(url);
-    // Remove trailing slash
     return urlObj.href.replace(/\/$/, '');
   } catch (e) {
     return url;
@@ -159,11 +218,12 @@ function processInternalLinks(
   return processedLinks;
 }
 
+// Main function to recursively scrape a website
 export async function scrapeWebsiteRecursively(
   rootUrl: string, 
   websiteId: number,
   maxDepth: number = 3, 
-  maxPages: number = 25
+  maxPages: number = 30
 ): Promise<void> {
   const visitedUrls = new Set<string>();
   const urlQueue: Array<{url: string, depth: number}> = [];
@@ -195,10 +255,11 @@ export async function scrapeWebsiteRecursively(
       visitedUrls.add(url);
       
       try {
-        // Scrape the current page
-        const scrapedData = await scrapeGenericWebsite(url);
+        // Always use Puppeteer for better content extraction
+        const scrapedData = await scrapeGenericWebsite(url, true);
         
-        if (scrapedData.content && scrapedData.content.length > 100) {
+        // Lower the content length threshold
+        if (scrapedData.content && scrapedData.content.length > 50) {
           // Store page in database
           const page = await prisma.page.create({
             data: {
@@ -231,10 +292,7 @@ export async function scrapeWebsiteRecursively(
         
         // Process internal links
         const internalLinks = processInternalLinks(
-          // Check if links exists and has the internal property
-          Array.isArray(scrapedData.links) 
-            ? [] 
-            : (scrapedData.links?.internal || []), 
+          Array.isArray(scrapedData.links) ? [] : (scrapedData.links?.internal || []), 
           url, 
           rootDomain
         );
@@ -246,12 +304,11 @@ export async function scrapeWebsiteRecursively(
           }
         });
         
-        // Optional: Add a small delay to be polite to the server
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Add a small delay to be polite to the server
+        await new Promise(resolve => setTimeout(resolve, 2000));
         
       } catch (error) {
         console.error(`Error processing ${url}:`, error);
-        // Continue with other URLs even if one fails
       }
     }
     
