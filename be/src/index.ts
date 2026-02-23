@@ -16,7 +16,7 @@ console.log('config.frontend.baseUrl', config.frontend.baseUrl)
 app.use(
   cors({
     origin: config.frontend.baseUrl ? [config.frontend.baseUrl] : [], 
-    allowedHeaders: ["Content-Type", "Authorization"], 
+    allowedHeaders: ["Content-Type", "Authorization", "x-api-secret"], 
     credentials: true, 
   })
 );
