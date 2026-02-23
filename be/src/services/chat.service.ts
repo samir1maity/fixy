@@ -2,7 +2,6 @@ import { prisma } from '../configs/db.js';
 import { retrieveSimilarChunks } from './embedding.service.js';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import config from '../configs/config.js';
-// const GEMINI_API_KEY = process.env.GEMINI_API_KEY as string;
 
 const genAI = new GoogleGenerativeAI(config.ai.api_key);
 
@@ -78,7 +77,7 @@ export async function generateChatResponse(
   try {
     // Configure Gemini model
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
+      model: config?.ai?.model ? config.ai.model : "",
       safetySettings: [
         {
           category: HarmCategory.HARM_CATEGORY_HARASSMENT,
