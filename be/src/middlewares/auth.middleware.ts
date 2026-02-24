@@ -128,26 +128,25 @@ export const isResourceOwner = (paramName: string = 'userId') => {
 export const authenticateChat = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const apiSecret = req.headers['x-api-secret'] as string;
-    const websiteId = Number(req.body.websiteId);
     
-    if (!apiSecret || !websiteId) {
+    if (!apiSecret) {
       res.status(401).json({ error: 'Authentication required' });
       return;
     }
     
     const website = await prisma.website.findFirst({
       where: {
-        id: websiteId,
         api_secret: apiSecret
       }
     });
 
     
     if (!website) {
-      res.status(401).json({ error: 'Invalid API key for this website' });
+      res.status(401).json({ error: 'Invalid API key' });
       return;
     }
     
+    req.body.websiteId = website.id;
     req.website = { websiteId: website.id };
     next();
   } catch (error) {

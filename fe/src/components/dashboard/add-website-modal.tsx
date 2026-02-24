@@ -91,7 +91,7 @@ const AddWebsiteModal = ({ isOpen, onClose, onSubmit, loading, error }: AddWebsi
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ type: "spring", damping: 20, stiffness: 300 }}
-            className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-md p-6 relative"
+            className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-sm p-4 sm:p-5 relative"
             onClick={e => e.stopPropagation()}
           >
             <button 
@@ -102,12 +102,12 @@ const AddWebsiteModal = ({ isOpen, onClose, onSubmit, loading, error }: AddWebsi
               <X size={20} />
             </button>
             
-            <div className="mb-6 text-center">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-fixy-accent to-primary mx-auto flex items-center justify-center mb-4">
-                <Globe className="h-6 w-6 text-white" />
+            <div className="mb-4 text-center">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-fixy-accent to-primary mx-auto flex items-center justify-center mb-3">
+                <Globe className="h-5 w-5 text-white" />
               </div>
-              <h2 className="text-2xl font-bold mb-1">Add New Website</h2>
-              <p className="text-gray-500 dark:text-gray-400">Enter your website URL to create a new chatbot</p>
+              <h2 className="text-xl font-bold mb-1">Add New Website</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Enter your website URL to create a new chatbot</p>
             </div>
             
             <form onSubmit={handleSubmit}>
@@ -118,7 +118,7 @@ const AddWebsiteModal = ({ isOpen, onClose, onSubmit, loading, error }: AddWebsi
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   disabled={loading}
-                  className="w-full"
+                  className="w-full h-9 text-sm"
                 />
               </div>
               
@@ -133,7 +133,7 @@ const AddWebsiteModal = ({ isOpen, onClose, onSubmit, loading, error }: AddWebsi
               
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-fixy-accent to-primary hover:opacity-90"
+                className="w-full h-9 text-sm bg-gradient-to-r from-fixy-accent to-primary hover:opacity-90"
                 disabled={loading}
               >
                 {loading ? (

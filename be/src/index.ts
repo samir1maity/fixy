@@ -11,8 +11,6 @@ import config from "./configs/config.js"
 const app = express();
 app.use(express.json());
 
-console.log('config.frontend.baseUrl', config.frontend.baseUrl)
-
 app.use(
   cors({
     origin: config.frontend.baseUrl ? [config.frontend.baseUrl] : [], 

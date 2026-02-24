@@ -1,17 +1,17 @@
 import { useState, useRef, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Send, ArrowLeft, Bot, User, Loader2, Trash2 } from 'lucide-react';
+import { Send, Bot, User, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useApi } from '@/hooks/use-api';
 import ReactMarkdown from 'react-markdown';
 // import apiService from '@/services/api';
-import DashboardHeader from '@/components/dashboard/dashboard-header';
 import chatApiService from '@/services/chat-api';
 import { useChatHistory } from '@/hooks/use-chat-history';
 import websiteApiService from '@/services/website-api';
+import AppLayout from '@/components/layout/app-layout';
 
 const ChatPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -112,25 +112,14 @@ const ChatPage = () => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="min-h-screen bg-background flex flex-col"
-    >
-      <DashboardHeader />
-      
-      <main className="container mx-auto px-4 py-8 mt-20 flex flex-col h-[calc(100vh-80px)]">
-        <div className="mb-6 flex flex-col items-start">
-          <div className="flex items-center mb-2 w-full justify-between">
-            <div className="flex items-center">
-              <Link to="/dashboard" className="mr-4">
-                <Button variant="ghost" size="icon">
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-              </Link>
-              <h1 className="text-3xl font-bold">Test Chatbot</h1>
+    <AppLayout scope="chat">
+      <div className="flex flex-col h-[calc(100vh-140px)]">
+        <div className="mb-4 flex flex-col items-start">
+          <div className="flex items-center mb-2 w-full justify-between gap-3">
+            <div className="flex items-center min-w-0">
+              <h1 className="text-2xl font-bold">Test Chatbot</h1>
               {websiteInfo && (
-                <span className="ml-4 text-muted-foreground">
+                <span className="ml-3 text-sm text-muted-foreground truncate">
                   {websiteInfo.domain}
                 </span>
               )}
@@ -140,13 +129,13 @@ const ChatPage = () => {
               variant="outline" 
               size="sm" 
               onClick={handleClearChat}
-              className="text-destructive hover:text-destructive"
+              className="text-destructive hover:text-destructive h-9"
             >
               <Trash2 className="h-4 w-4 mr-2" />
               Clear Chat
             </Button>
           </div>
-          <p className="text-muted-foreground ml-14">
+          <p className="text-sm text-muted-foreground">
             Test how your AI assistant responds to questions about your website content
           </p>
         </div>
@@ -155,11 +144,11 @@ const ChatPage = () => {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.5 }}
-          className="bg-card border rounded-xl overflow-hidden flex flex-col flex-1"
+          className="bg-card border rounded-xl overflow-hidden flex flex-col flex-1 min-h-0"
         >
           {/* Chat Messages */}
-          <div className="flex-1 overflow-y-auto p-6">
-            <div className="space-y-6">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-5">
+            <div className="space-y-5">
               {messages.map((message) => (
                 <div 
                   key={message.id} 
@@ -176,7 +165,7 @@ const ChatPage = () => {
                         : <Bot className="h-4 w-4" />
                       }
                     </div>
-                    <div className={`rounded-lg p-4 ${
+                    <div className={`rounded-lg p-3 ${
                       message.role === 'user' 
                         ? 'bg-primary text-primary-foreground' 
                         : 'bg-muted text-foreground'
@@ -197,7 +186,7 @@ const ChatPage = () => {
                     <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center mr-3">
                       <Bot className="h-4 w-4 text-muted-foreground" />
                     </div>
-                    <div className="rounded-lg p-4 bg-muted flex items-center space-x-2">
+                    <div className="rounded-lg p-3 bg-muted flex items-center space-x-2">
                       <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                       <span className="text-muted-foreground">Thinking...</span>
                     </div>
@@ -218,20 +207,20 @@ const ChatPage = () => {
                 onKeyDown={handleKeyDown}
                 placeholder="Type your message..."
                 disabled={loading}
-                className="flex-1"
+                className="flex-1 h-9"
               />
               <Button 
                 onClick={handleSendMessage} 
                 disabled={!input.trim() || loading}
-                className="bg-gradient-to-r from-fixy-accent to-primary hover:opacity-90"
+                className="h-9 bg-gradient-to-r from-fixy-accent to-primary hover:opacity-90"
               >
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               </Button>
             </div>
           </div>
         </motion.div>
-      </main>
-    </motion.div>
+      </div>
+    </AppLayout>
   );
 };
 

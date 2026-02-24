@@ -64,13 +64,13 @@ console.log('website after adding to dashboard-->', website);
     <motion.div
       initial="hidden"
       animate="visible"
-      className="bg-card border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow"
+      className="bg-card border rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow"
     >
       <div className="flex justify-between items-start">
         <div>
-          <h3 className="text-xl font-semibold mb-1">{website.name}</h3>
+          <h3 className="text-lg font-semibold mb-0.5">{website.name}</h3>
           <div className="flex items-center text-muted-foreground">
-            <span className="text-sm">{website.domain}</span>
+            <span className="text-xs sm:text-sm">{website.domain}</span>
             <button 
               onClick={handleCopyDomain}
               className="ml-1.5 text-muted-foreground hover:text-foreground"
@@ -80,7 +80,7 @@ console.log('website after adding to dashboard-->', website);
           </div>
         </div>
         
-        <div className="mt-4 flex justify-end">
+        <div className="flex justify-end">
           <div className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center ${
             website.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
             website.status === 'pending' || website.status === 'embedding' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' :
@@ -96,21 +96,21 @@ console.log('website after adding to dashboard-->', website);
         </div>
       </div>
       
-      <div className="mt-6 space-y-4">
+      <div className="mt-4 space-y-2.5">
         <div className="flex justify-between items-center">
-          <span className="text-sm text-muted-foreground">Requests today</span>
-          <span className="font-medium">{website.requestsToday}</span>
+          <span className="text-xs sm:text-sm text-muted-foreground">Requests today</span>
+          <span className="text-sm font-medium">{website.requestsToday}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-sm text-muted-foreground">Total requests</span>
-          <span className="font-medium">{website.requestsTotal}</span>
+          <span className="text-xs sm:text-sm text-muted-foreground">Total requests</span>
+          <span className="text-sm font-medium">{website.requestsTotal}</span>
         </div>
       </div>
       
       {website.status === 'completed' && (
-        <div className="mt-6 pt-4 border-t">
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-sm font-medium">API Secret</span>
+        <div className="mt-4 pt-3 border-t">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-xs sm:text-sm font-medium">API Secret</span>
             <Button 
               variant="ghost" 
               size="sm" 
@@ -122,7 +122,7 @@ console.log('website after adding to dashboard-->', website);
           </div>
           
           <div className="relative">
-            <div className="bg-muted rounded p-2 flex items-center justify-between">
+            <div className="bg-muted rounded p-1.5 sm:p-2 flex items-center justify-between gap-2">
               <div className="overflow-hidden">
                 {showSecret ? (
                   <span className="text-xs font-mono">{website.api_secret || '••••••••••••••••••••••••••'}</span>
@@ -154,21 +154,21 @@ console.log('website after adding to dashboard-->', website);
       )}
       
       {website.status === 'failed' && website.statusMessage && (
-        <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-md text-sm">
+        <div className="mt-3 p-2.5 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-md text-xs sm:text-sm">
           <p className="font-medium mb-1">Processing Failed</p>
           <p>{website.statusMessage}</p>
         </div>
       )}
       
-      <div className="mt-6 flex justify-between">
-        <a 
+      <div className="mt-4 flex justify-between items-center">
+        {/* <a 
           href={`https://${website.domain}`} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="text-sm text-muted-foreground hover:text-foreground flex items-center"
+          className="text-xs sm:text-sm text-muted-foreground hover:text-foreground flex items-center"
         >
           Visit website <ExternalLink className="ml-1 h-3.5 w-3.5" />
-        </a>
+        </a> */}
         
         {website.status === 'completed' && (
           <Link to={`/chat/${website.id}`}>
