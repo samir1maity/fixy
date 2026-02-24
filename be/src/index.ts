@@ -7,23 +7,46 @@ import cors from 'cors';
 import websiteRouter from "./routes/website.route.js";
 import analyticsRouter from "./routes/analytics.route.js";
 import config from "./configs/config.js"
+import type { CorsOptions } from "cors";
 
 const app = express();
 app.use(express.json());
 
-app.use(
-  cors({
-    origin: config.frontend.baseUrl ? [config.frontend.baseUrl] : [], 
-    allowedHeaders: ["Content-Type", "Authorization", "x-api-secret"], 
-    credentials: true, 
-  })
-);
+const dashboardOrigins = (config.frontend.baseUrl || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const dashboardCorsOptions: CorsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+
+    if (dashboardOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+
+    callback(new Error("Not allowed by CORS"));
+  },
+  allowedHeaders: ["Content-Type", "Authorization", "x-api-secret"],
+  credentials: true,
+};
+
+const chatCorsOptions: CorsOptions = {
+  origin: true,
+  allowedHeaders: ["Content-Type", "Authorization", "x-api-secret"],
+  credentials: false,
+};
 
 app.get('/',(req,res)=>{
   res.send("welcome to fixy backend");
 })
 
-app.use('/api/v1/chat', chatRouter)
+app.use('/api/v1/chat', cors(chatCorsOptions), chatRouter)
+app.use(cors(dashboardCorsOptions));
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/websites', websiteRouter);
 app.use('/api/v1/analytics', analyticsRouter);
