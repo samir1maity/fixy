@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ExternalLink, Copy, Eye, EyeOff, PenSquare, Loader2 } from 'lucide-react';
+import { Copy, Eye, EyeOff, PenSquare, Loader2, BarChart2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 import { toast as sonnerToast } from 'sonner';
 
@@ -22,11 +21,8 @@ interface WebsiteCardProps {
   isPolling?: boolean;
 }
 
-const WebsiteCard = ({ website, isPending = false, isPolling = false }: WebsiteCardProps) => {
+const WebsiteCard = ({ website, isPending = false }: WebsiteCardProps) => {
   const [showSecret, setShowSecret] = useState(false);
-  const [apiSecret, setApiSecret] = useState<string | null>(website.api_secret);
-  const { toast } = useToast();
-console.log('website after adding to dashboard-->', website);
   const handleCopyDomain = () => {
     navigator.clipboard.writeText(website.domain);
     sonnerToast.success("Domain copied", {
@@ -36,9 +32,8 @@ console.log('website after adding to dashboard-->', website);
   };
 
   const handleCopySecret = () => {
-    console.log('first')
-    if (apiSecret) {
-      navigator.clipboard.writeText(apiSecret);
+    if (website.api_secret) {
+      navigator.clipboard.writeText(website.api_secret);
       sonnerToast.success("Api Secret copied", {
         position: "top-right",
         duration: 3000,
@@ -136,7 +131,7 @@ console.log('website after adding to dashboard-->', website);
                   size="sm" 
                   onClick={handleCopySecret}
                   className="h-6 w-6 p-0"
-                  disabled={!apiSecret}
+                  disabled={!website.api_secret}
                 >
                   <Copy className="h-3.5 w-3.5" />
                 </Button>
@@ -160,27 +155,30 @@ console.log('website after adding to dashboard-->', website);
         </div>
       )}
       
-      <div className="mt-4 flex justify-between items-center">
-        {/* <a 
-          href={`https://${website.domain}`} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="text-xs sm:text-sm text-muted-foreground hover:text-foreground flex items-center"
-        >
-          Visit website <ExternalLink className="ml-1 h-3.5 w-3.5" />
-        </a> */}
-        
-        {website.status === 'completed' && (
-          <Link to={`/chat/${website.id}`}>
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="border-primary text-primary hover:bg-primary hover:text-white"
-            >
-              Test Chatbot
-            </Button>
-          </Link>
-        )}
+      <div className="mt-4 flex justify-between items-center gap-2">
+        {website.status === 'completed' ? (
+          <div className="flex items-center gap-2 w-full">
+            <Link to={`/analytics/${website.id}`} className="flex-1">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full gap-1.5 text-muted-foreground hover:text-foreground"
+              >
+                <BarChart2 className="h-3.5 w-3.5" />
+                Analytics
+              </Button>
+            </Link>
+            <Link to={`/chat/${website.id}`} className="flex-1">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full border-primary text-primary hover:bg-primary hover:text-white"
+              >
+                Test Chatbot
+              </Button>
+            </Link>
+          </div>
+        ) : null}
       </div>
     </motion.div>
   );

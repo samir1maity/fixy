@@ -46,6 +46,12 @@ const Navbar = () => {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-8">
+          <a href="#services" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white font-medium">
+            Services
+          </a>
+          <a href="#pricing" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white font-medium">
+            Pricing
+          </a>
           <Link to="/docs" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white font-medium">
             API Docs
           </Link>
@@ -88,8 +94,22 @@ const Navbar = () => {
           className="md:hidden container py-4 mt-2"
         >
           <nav className="flex flex-col space-y-4">
-            <Link 
-              to="/docs" 
+            <a
+              href="#services"
+              className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white font-medium px-2 py-1"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Services
+            </a>
+            <a
+              href="#pricing"
+              className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white font-medium px-2 py-1"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Pricing
+            </a>
+            <Link
+              to="/docs"
               className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white font-medium px-2 py-1"
               onClick={() => setMobileMenuOpen(false)}
             >

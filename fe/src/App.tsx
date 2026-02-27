@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/auth-context";
+import { ThemeProvider } from "./contexts/theme-context";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 import SuspenseFallback from "./pages/Suspense";
@@ -15,9 +16,11 @@ const Signup = lazy(() => import("./pages/Signup"));
 const ChatPage = lazy(() => import("./pages/ChatPage"));
 const Profile = lazy(() => import("./pages/Profile"));
 const ApiDocs = lazy(() => import("./pages/ApiDocs"));
+const AnalyticsPage = lazy(() => import("./pages/AnalyticsPage"));
 
 function App() {
   return (
+    <ThemeProvider>
     <AuthProvider>
       <Router>
         <Suspense fallback={<SuspenseFallback />}>
@@ -70,6 +73,15 @@ function App() {
             />
 
             <Route
+              path="/analytics/:id"
+              element={
+                <ProtectedRoute>
+                  <AnalyticsPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
               path="/profile"
               element={
                 <ProtectedRoute>
@@ -93,6 +105,7 @@ function App() {
         <Toaster />
       </Router>
     </AuthProvider>
+    </ThemeProvider>
   );
 }
 

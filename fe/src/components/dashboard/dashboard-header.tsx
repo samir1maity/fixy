@@ -1,9 +1,12 @@
 
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import { Sun, Moon } from 'lucide-react';
+import { useTheme } from '@/contexts/theme-context';
 
 const DashboardHeader = () => {
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <motion.header
       initial={{ y: -100, opacity: 0 }}
@@ -25,13 +28,23 @@ const DashboardHeader = () => {
           </span>
         </Link>
 
-        {/* <nav className="hidden md:flex items-center space-x-8">
-          <Button 
-            className="bg-gradient-to-r from-fixy-accent to-primary hover:opacity-90 transition-opacity"
+        <motion.button
+          onClick={toggleTheme}
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.92 }}
+          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          className="relative h-9 w-9 rounded-full flex items-center justify-center border border-border bg-background/60 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+        >
+          <motion.span
+            key={theme}
+            initial={{ opacity: 0, rotate: -30, scale: 0.7 }}
+            animate={{ opacity: 1, rotate: 0, scale: 1 }}
+            transition={{ duration: 0.2 }}
+            className="absolute"
           >
-            Feedback form
-          </Button>
-        </nav> */}
+            {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </motion.span>
+        </motion.button>
       </div>
     </motion.header>
   );

@@ -1,217 +1,327 @@
-
-import { motion } from 'framer-motion';
-import { fadeIn } from '@/lib/motion';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { fadeIn, staggerContainer } from '@/lib/motion';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, X } from 'lucide-react';
+import { CheckCircle, Minus, Zap } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-const pricingPlans = [
+interface PlanFeature {
+  text: string;
+  included: boolean;
+}
+
+interface Plan {
+  name: string;
+  tagline: string;
+  monthlyPrice: number | null;
+  annualPrice: number | null;
+  period: string;
+  features: PlanFeature[];
+  highlight: boolean;
+  badge?: string;
+  cta: string;
+  ctaLink: string;
+  accent: string;
+}
+
+const plans: Plan[] = [
   {
-    name: "Free",
-    description: "Perfect for small personal websites.",
-    price: "$0",
-    period: "forever",
+    name: 'Free',
+    tagline: 'Try it out — no credit card needed.',
+    monthlyPrice: 0,
+    annualPrice: 0,
+    period: 'forever',
+    highlight: false,
+    cta: 'Get Started Free',
+    ctaLink: '/signup',
+    accent: 'from-gray-400 to-gray-500',
     features: [
-      "500 chat messages per month",
-      "Basic customization",
-      "Single website",
-      "Standard support",
-      "Basic analytics"
+      { text: '1 website', included: true },
+      { text: '500 messages / month', included: true },
+      { text: 'Basic analytics', included: true },
+      { text: 'Embeddable widget', included: true },
+      { text: 'Community support', included: true },
+      { text: 'Remove Fixy branding', included: false },
+      { text: 'Lead capture', included: false },
+      { text: 'Auto re-crawl', included: false },
+      { text: 'Team seats', included: false },
+      { text: 'Webhook / Zapier', included: false },
     ],
-    limitations: [
-      "Fixy branding",
-      "Limited customization",
-      "No advanced features"
-    ],
-    isMostPopular: false,
-    buttonText: "Get Started"
   },
   {
-    name: "Pro",
-    description: "Ideal for businesses and professional sites.",
-    price: "$29",
-    period: "per month",
+    name: 'Starter',
+    tagline: 'For growing businesses that need more.',
+    monthlyPrice: 19,
+    annualPrice: 15,
+    period: 'per month',
+    highlight: false,
+    cta: 'Start Free Trial',
+    ctaLink: '/signup',
+    accent: 'from-cyan-500 to-blue-500',
     features: [
-      "10,000 chat messages per month",
-      "Advanced customization",
-      "Up to 5 websites",
-      "Priority support",
-      "Full analytics dashboard",
-      "No Fixy branding",
-      "Training on custom data",
-      "API access"
+      { text: '3 websites', included: true },
+      { text: '5,000 messages / month', included: true },
+      { text: 'Advanced analytics', included: true },
+      { text: 'Embeddable widget', included: true },
+      { text: 'Priority support', included: true },
+      { text: 'Remove Fixy branding', included: false },
+      { text: 'Lead capture', included: true },
+      { text: 'Auto re-crawl (weekly)', included: true },
+      { text: 'Team seats', included: false },
+      { text: 'Webhook / Zapier', included: false },
     ],
-    limitations: [],
-    isMostPopular: true,
-    buttonText: "Start Free Trial"
   },
   {
-    name: "Enterprise",
-    description: "For large businesses with advanced needs.",
-    price: "Custom",
-    period: "pricing",
+    name: 'Pro',
+    tagline: 'Everything you need to run a serious product.',
+    monthlyPrice: 49,
+    annualPrice: 39,
+    period: 'per month',
+    highlight: true,
+    badge: 'Most Popular',
+    cta: 'Start Free Trial',
+    ctaLink: '/signup',
+    accent: 'from-fixy-accent to-primary',
     features: [
-      "Unlimited chat messages",
-      "Complete customization",
-      "Unlimited websites",
-      "Dedicated support",
-      "Advanced analytics with exports",
-      "Custom integrations",
-      "On-premise deployment option",
-      "SLA guarantee",
-      "HIPAA & GDPR compliance"
+      { text: '10 websites', included: true },
+      { text: '50,000 messages / month', included: true },
+      { text: 'Full analytics + exports', included: true },
+      { text: 'Embeddable widget', included: true },
+      { text: 'Priority support', included: true },
+      { text: 'Remove Fixy branding', included: true },
+      { text: 'Lead capture', included: true },
+      { text: 'Auto re-crawl (daily)', included: true },
+      { text: '5 team seats', included: true },
+      { text: 'Webhook / Zapier', included: true },
     ],
-    limitations: [],
-    isMostPopular: false,
-    buttonText: "Contact Sales"
-  }
+  },
+  {
+    name: 'Agency',
+    tagline: 'White-label solution for teams and agencies.',
+    monthlyPrice: 149,
+    annualPrice: 119,
+    period: 'per month',
+    highlight: false,
+    cta: 'Contact Sales',
+    ctaLink: '/signup',
+    accent: 'from-fuchsia-500 to-purple-600',
+    features: [
+      { text: 'Unlimited websites', included: true },
+      { text: 'Unlimited messages', included: true },
+      { text: 'Full analytics + exports', included: true },
+      { text: 'Embeddable widget', included: true },
+      { text: 'Dedicated support + SLA', included: true },
+      { text: 'Full white-label', included: true },
+      { text: 'Lead capture', included: true },
+      { text: 'Auto re-crawl (real-time)', included: true },
+      { text: 'Unlimited team seats', included: true },
+      { text: 'Webhook / Zapier + custom integrations', included: true },
+    ],
+  },
 ];
 
-const PricingSection = () => {
+// ── Pricing card ─────────────────────────────────────────────────────────────
+
+const PricingCard = ({
+  plan,
+  isAnnual,
+  index,
+}: {
+  plan: Plan;
+  isAnnual: boolean;
+  index: number;
+}) => {
+  const price = isAnnual ? plan.annualPrice : plan.monthlyPrice;
+
   return (
-    <section id="pricing" className="py-20 relative">
-      <div className="blur-dot w-[350px] h-[350px] bg-fixy-pastel-purple -right-20 top-20"></div>
-      
+    <motion.div
+      variants={fadeIn('up', 'tween', 0.3, 0.1 * index)}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, amount: 0.15 }}
+      whileHover={{ y: -6, transition: { duration: 0.25 } }}
+      className={`relative flex flex-col rounded-2xl overflow-hidden transition-shadow ${
+        plan.highlight
+          ? 'border-2 border-fixy-accent shadow-2xl shadow-fixy-accent/20 bg-white dark:bg-gray-900'
+          : 'border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm hover:shadow-lg'
+      }`}
+    >
+      {/* Top gradient bar */}
+      <div className={`h-1 bg-gradient-to-r ${plan.accent}`} />
+
+      {/* Badge */}
+      {plan.badge && (
+        <div className={`absolute top-3 right-3 bg-gradient-to-r ${plan.accent} text-white text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full flex items-center gap-1`}>
+          <Zap className="w-2.5 h-2.5" /> {plan.badge}
+        </div>
+      )}
+
+      <div className="p-7 pb-4">
+        <p className={`text-[11px] font-bold uppercase tracking-widest bg-gradient-to-r ${plan.accent} bg-clip-text text-transparent mb-1`}>
+          {plan.name}
+        </p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-5 min-h-[2.5rem]">{plan.tagline}</p>
+
+        {/* Price */}
+        <div className="flex items-end gap-1.5 mb-1">
+          {price === null ? (
+            <span className="text-4xl font-bold">Custom</span>
+          ) : (
+            <>
+              <span className="text-4xl font-bold">${price}</span>
+              <span className="text-gray-400 dark:text-gray-500 text-sm pb-1">/ {plan.period}</span>
+            </>
+          )}
+        </div>
+
+        {/* Annual savings indicator */}
+        <AnimatePresence>
+          {isAnnual && price !== null && price > 0 && (
+            <motion.p
+              key="save"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mb-4"
+            >
+              Save ${((plan.monthlyPrice! - plan.annualPrice!) * 12).toLocaleString()} / year
+            </motion.p>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <div className="px-7 pb-7 flex flex-col flex-1 gap-6">
+        {/* CTA */}
+        <Link to={plan.ctaLink}>
+          <Button
+            className={`w-full font-semibold ${
+              plan.highlight
+                ? `bg-gradient-to-r ${plan.accent} hover:opacity-90 text-white`
+                : 'bg-gray-900 dark:bg-gray-700 hover:bg-gray-800 dark:hover:bg-gray-600 text-white'
+            }`}
+          >
+            {plan.cta}
+          </Button>
+        </Link>
+
+        {/* Feature list */}
+        <ul className="space-y-2.5 flex-1">
+          {plan.features.map((f) => (
+            <li key={f.text} className="flex items-start gap-2.5">
+              {f.included ? (
+                <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+              ) : (
+                <Minus className="w-4 h-4 text-gray-300 dark:text-gray-600 shrink-0 mt-0.5" />
+              )}
+              <span className={`text-sm ${f.included ? 'text-gray-700 dark:text-gray-200' : 'text-gray-400 dark:text-gray-600'}`}>
+                {f.text}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </motion.div>
+  );
+};
+
+// ── Section ──────────────────────────────────────────────────────────────────
+
+const PricingSection = () => {
+  const [isAnnual, setIsAnnual] = useState(false);
+
+  return (
+    <section id="pricing" className="py-24 relative overflow-hidden">
+      <div className="blur-dot w-[350px] h-[350px] bg-fixy-pastel-purple -right-20 top-20" />
+      <div className="blur-dot w-[250px] h-[250px] bg-fixy-pastel-peach -left-10 bottom-10" />
+
       <div className="container mx-auto px-4">
-        <motion.div 
+        {/* Header */}
+        <motion.div
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, amount: 0.25 }}
-          className="text-center max-w-3xl mx-auto mb-16"
+          className="text-center max-w-3xl mx-auto mb-12"
         >
-          <motion.div 
-            variants={fadeIn("up", "tween", 0.2, 0)}
+          <motion.div
+            variants={fadeIn('up', 'tween', 0.2, 0)}
             className="bg-gradient-to-r from-fixy-accent/10 to-primary/10 text-fixy-accent font-medium py-1 px-4 rounded-full inline-block mb-4"
           >
             Simple Pricing
           </motion.div>
-          
-          <motion.h2 
-            variants={fadeIn("up", "tween", 0.3, 0.1)}
+
+          <motion.h2
+            variants={fadeIn('up', 'tween', 0.3, 0.1)}
             className="text-3xl md:text-4xl font-bold mb-4"
           >
-            Choose the Perfect Plan for Your Needs
+            Transparent Plans.{' '}
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-fixy-accent to-primary">
+              No Surprises.
+            </span>
           </motion.h2>
-          
-          <motion.p 
-            variants={fadeIn("up", "tween", 0.3, 0.2)}
-            className="text-gray-600 dark:text-gray-300 text-lg"
+
+          <motion.p
+            variants={fadeIn('up', 'tween', 0.3, 0.2)}
+            className="text-gray-600 dark:text-gray-300 text-lg mb-8"
           >
-            Start with our free plan or upgrade for more features. All plans include a 14-day money-back guarantee.
+            Start free and scale as you grow. All paid plans include a 14-day free trial.
           </motion.p>
+
+          {/* Billing toggle */}
+          <motion.div
+            variants={fadeIn('up', 'tween', 0.3, 0.25)}
+            className="inline-flex items-center bg-gray-100 dark:bg-gray-800 rounded-full p-1"
+          >
+            <button
+              onClick={() => setIsAnnual(false)}
+              className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
+                !isAnnual
+                  ? 'bg-white dark:bg-gray-700 shadow text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setIsAnnual(true)}
+              className={`px-5 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 ${
+                isAnnual
+                  ? 'bg-white dark:bg-gray-700 shadow text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Annual
+              <span className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                −20%
+              </span>
+            </button>
+          </motion.div>
         </motion.div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {pricingPlans.map((plan, index) => (
-            <PricingCard 
-              key={index}
-              name={plan.name}
-              description={plan.description}
-              price={plan.price}
-              period={plan.period}
-              features={plan.features}
-              limitations={plan.limitations}
-              isMostPopular={plan.isMostPopular}
-              buttonText={plan.buttonText}
-              index={index}
-            />
+
+        {/* Cards */}
+        <motion.div
+          variants={staggerContainer(0.1, 0.05)}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.1 }}
+          className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6"
+        >
+          {plans.map((plan, i) => (
+            <PricingCard key={plan.name} plan={plan} isAnnual={isAnnual} index={i} />
           ))}
-        </div>
+        </motion.div>
+
+        {/* Footer note */}
+        <motion.p
+          variants={fadeIn('up', 'tween', 0.3, 0.1)}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.5 }}
+          className="text-center text-sm text-gray-500 dark:text-gray-400 mt-10"
+        >
+          All plans include a 14-day money-back guarantee. No credit card required for the free plan.
+        </motion.p>
       </div>
     </section>
-  );
-};
-
-const PricingCard = ({ 
-  name, 
-  description, 
-  price, 
-  period, 
-  features, 
-  limitations,
-  isMostPopular,
-  buttonText,
-  index 
-}: { 
-  name: string;
-  description: string;
-  price: string;
-  period: string;
-  features: string[];
-  limitations: string[];
-  isMostPopular: boolean;
-  buttonText: string;
-  index: number;
-}) => {
-  return (
-    <motion.div
-      variants={fadeIn("up", "tween", 0.3, 0.1 * index)}
-      initial="hidden"
-      whileInView="show"
-      viewport={{ once: true, amount: 0.25 }}
-      className={`glass-card rounded-xl overflow-hidden transition-all duration-300 relative ${
-        isMostPopular ? 'border-2 border-fixy-accent shadow-lg' : 'border border-gray-200 dark:border-gray-700'
-      }`}
-      whileHover={{ y: -10, transition: { duration: 0.3 } }}
-    >
-      {isMostPopular && (
-        <div className="absolute top-0 inset-x-0">
-          <div className="bg-gradient-to-r from-fixy-accent to-primary text-white text-xs font-semibold py-1 text-center">
-            MOST POPULAR
-          </div>
-        </div>
-      )}
-      
-      <div className="p-6 pb-0">
-        <h3 className="text-2xl font-bold mb-2">{name}</h3>
-        <p className="text-gray-600 dark:text-gray-300 mb-6">{description}</p>
-        
-        <div className="mb-6">
-          <div className="flex items-baseline">
-            <span className="text-4xl font-bold">{price}</span>
-            <span className="text-gray-500 dark:text-gray-400 ml-2">/ {period}</span>
-          </div>
-        </div>
-      </div>
-      
-      <div className="p-6 pt-0">
-        <Button 
-          className={`w-full mb-6 ${
-            isMostPopular 
-              ? 'bg-gradient-to-r from-fixy-accent to-primary hover:opacity-90' 
-              : 'bg-gray-900 dark:bg-gray-700 hover:bg-gray-800 dark:hover:bg-gray-600'
-          }`}
-        >
-          {buttonText}
-        </Button>
-        
-        <div className="space-y-4">
-          <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">Features:</p>
-          
-          <ul className="space-y-2">
-            {features.map((feature, i) => (
-              <li key={i} className="flex items-start">
-                <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 shrink-0" />
-                <span className="text-sm">{feature}</span>
-              </li>
-            ))}
-          </ul>
-          
-          {limitations.length > 0 && (
-            <>
-              <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">Limitations:</p>
-              <ul className="space-y-2">
-                {limitations.map((limitation, i) => (
-                  <li key={i} className="flex items-start">
-                    <X className="w-4 h-4 text-gray-400 mr-2 mt-0.5 shrink-0" />
-                    <span className="text-sm text-gray-500">{limitation}</span>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-        </div>
-      </div>
-    </motion.div>
   );
 };
 
