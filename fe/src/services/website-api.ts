@@ -43,6 +43,9 @@ export const websiteApiService = {
     updateWidgetConfig: async (websiteId: number, config: WidgetConfig): Promise<void> => {
         return apiService.patch(`/websites/${websiteId}/widget-config`, config);
     },
+    regenerateSecret: async (websiteId: number): Promise<{ secret: string }> => {
+        return apiService.get<{ secret: string }>(`/websites/${websiteId}/secret`);
+    },
 }
 
 export default websiteApiService;

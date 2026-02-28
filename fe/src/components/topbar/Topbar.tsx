@@ -30,6 +30,7 @@ function useBreadcrumbs(): BreadcrumbSegment[] {
 
   if (pathname === '/dashboard')  return [{ label: 'Projects' }];
   if (pathname === '/profile')    return [{ label: 'Profile' }];
+  if (pathname === '/api-keys')   return [{ label: 'API Keys' }];
 
   if (analyticsMatch) {
     return [
@@ -63,7 +64,7 @@ const UserMenu = () => {
       <DropdownMenuTrigger asChild>
         <button
           aria-label="User menu"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-400 to-indigo-500 text-xs font-semibold text-white ring-2 ring-background hover:ring-primary/30 transition-all outline-none focus-visible:ring-primary/50"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-indigo-700 text-xs font-semibold text-white ring-2 ring-background hover:ring-primary/30 transition-all outline-none focus-visible:ring-primary/50"
         >
           {initial}
         </button>
@@ -175,7 +176,7 @@ export const MobileTopbar = () => {
 
       {/* Logo */}
       <Link to="/dashboard" className="flex items-center gap-1.5 mr-2">
-        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-violet-500 to-indigo-600">
+        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-violet-700 to-indigo-800">
           <span className="text-[10px] font-bold text-white">F</span>
         </div>
         <span className="text-sm font-semibold">Fixy</span>
@@ -202,7 +203,7 @@ export const MobileTopbar = () => {
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-400 to-indigo-500 text-xs font-semibold text-white outline-none">
+          <button className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-indigo-700 text-xs font-semibold text-white outline-none">
             {initial}
           </button>
         </DropdownMenuTrigger>

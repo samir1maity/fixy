@@ -18,6 +18,7 @@ const Profile = lazy(() => import("./pages/Profile"));
 const ApiDocs = lazy(() => import("./pages/ApiDocs"));
 const AnalyticsPage = lazy(() => import("./pages/AnalyticsPage"));
 const ChatbotSettingsPage = lazy(() => import("./pages/ChatbotSettingsPage"));
+const ApiKeysPage = lazy(() => import("./pages/ApiKeysPage"));
 
 function App() {
   return (
@@ -96,6 +97,15 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ChatbotSettingsPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/api-keys"
+              element={
+                <ProtectedRoute>
+                  <ApiKeysPage />
                 </ProtectedRoute>
               }
             />

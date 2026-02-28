@@ -5,6 +5,7 @@ import {
   BarChart2,
   Settings2,
   CircleUser,
+  KeyRound,
   LogOut,
   X,
 } from 'lucide-react';
@@ -114,7 +115,7 @@ const SidebarBody = ({
       {/* Logo */}
       <div className="flex h-14 shrink-0 items-center border-b border-border/60 px-4">
         <Link to="/dashboard" className="flex items-center gap-2.5">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 shadow-sm">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-700 to-indigo-800 shadow-sm">
             <span className="text-xs font-bold text-white">F</span>
           </div>
           <span className="text-sm font-semibold tracking-tight">Fixy</span>
@@ -144,6 +145,11 @@ const SidebarBody = ({
           firstWebsiteId={firstWebsiteId}
         />
         <NavItem
+          to="/api-keys"
+          icon={<KeyRound className="h-4 w-4" />}
+          label="API Keys"
+        />
+        <NavItem
           to="/profile"
           icon={<CircleUser className="h-4 w-4" />}
           label="Profile"
@@ -153,7 +159,7 @@ const SidebarBody = ({
       {/* User strip */}
       <div className="shrink-0 border-t border-border/60 px-3 py-3">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-400 to-indigo-500 text-xs font-semibold text-white select-none">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-indigo-700 text-xs font-semibold text-white select-none">
             {user?.email?.[0]?.toUpperCase() ?? 'U'}
           </div>
           <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
