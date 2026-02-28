@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   Plus, 
   Search, 
-  RefreshCw,
 } from 'lucide-react';
 import { 
   fadeIn, 
@@ -15,9 +13,8 @@ import {
 } from '@/lib/motion';
 import WebsiteCard from '@/components/dashboard/website-card';
 import DashboardStats from '@/components/dashboard/dashboard-stats';
-import ProfileDropdown from '@/components/dashboard/profile-dropdown';
-import AddWebsiteModal from '@/components/dashboard/add-website-modal';
-import AppLayout from '@/components/layout/app-layout';
+import AddWebsiteModal, { AddWebsiteFormData } from '@/components/dashboard/add-website-modal';
+import AppShell from '@/components/layout/AppShell';
 import { useApi } from '@/hooks/use-api';
 import websiteApiService, { Website } from '@/services/website-api';
 import analyticsApiService, { UserChatStats } from '@/services/analytics-api';
@@ -27,7 +24,6 @@ import { toast as sonnerToast } from "sonner";
 
 
 const Dashboard = () => {
-  const { user, logout } = useAuth();
   const { toast } = useToast();
   const [websites, setWebsites] = useState<Website[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -57,7 +53,6 @@ const Dashboard = () => {
     async () => {
       // Important: Don't reset the websites array here
       const allWebsites = await executeWebsiteFetch(() => websiteApiService.getWebsites());
-      console.log('allWebsites from polling -->', allWebsites);
       
       if (allWebsites) {
         // Update websites without losing the current display
@@ -140,35 +135,33 @@ const Dashboard = () => {
     setIsAddModalOpen(true);
   };
 
-  const handleSubmitWebsite = async (url: string) => {
+  const handleSubmitWebsite = async (formData: AddWebsiteFormData) => {
     try {
-      const response = await executeWebsiteFetch(() => websiteApiService.registerWebsite(url));
-      
+      const response = await executeWebsiteFetch(() => websiteApiService.registerWebsite(formData));
+
       if (response) {
-        // Add the new website to the list with pending status
+        const domain = formData.url ? new URL(formData.url).hostname : formData.name.toLowerCase().replace(/\s+/g, '-');
         const newWebsite: Website = {
           id: response.id,
-          domain: new URL(url).hostname,
+          domain,
           status: 'pending',
           chatbotActive: false,
           requestsToday: 0,
           requestsTotal: 0,
           lastChecked: new Date().toISOString(),
-          name: new URL(url).hostname,
+          name: formData.name,
           api_secret: response.api_secret
         };
-        
+
         setWebsites(prev => [...prev, newWebsite]);
         setPendingWebsites(prev => [...prev, response.id]);
-        
-        // Start polling if not already polling
+
         startPolling();
-        
         setIsAddModalOpen(false);
-        
+
         toast({
-          title: "Website added",
-          description: "Your website is being processed. This may take a few minutes.",
+          title: "Added successfully",
+          description: "Your content is being processed. This may take a few minutes.",
         });
       }
     } catch (error) {
@@ -186,7 +179,7 @@ const Dashboard = () => {
   };
 
   return (
-    <AppLayout scope="main">
+    <AppShell>
       {/* Dashboard Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-5">
         <motion.div 
@@ -289,7 +282,7 @@ const Dashboard = () => {
         loading={websitesLoading}
         error={websitesLoading ? new Error("Error registering website") : null}
       />
-    </AppLayout>
+    </AppShell>
   );
 };
 

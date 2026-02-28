@@ -11,7 +11,7 @@ import ReactMarkdown from 'react-markdown';
 import chatApiService from '@/services/chat-api';
 import { useChatHistory } from '@/hooks/use-chat-history';
 import websiteApiService from '@/services/website-api';
-import AppLayout from '@/components/layout/app-layout';
+import AppShell from '@/components/layout/AppShell';
 
 const ChatPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -112,7 +112,7 @@ const ChatPage = () => {
   };
 
   return (
-    <AppLayout scope="chat">
+    <AppShell>
       <div className="flex flex-col h-[calc(100vh-140px)]">
         <div className="mb-4 flex flex-col items-start">
           <div className="flex items-center mb-2 w-full justify-between gap-3">
@@ -220,7 +220,7 @@ const ChatPage = () => {
           </div>
         </motion.div>
       </div>
-    </AppLayout>
+    </AppShell>
   );
 };
 

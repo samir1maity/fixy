@@ -17,6 +17,7 @@ const ChatPage = lazy(() => import("./pages/ChatPage"));
 const Profile = lazy(() => import("./pages/Profile"));
 const ApiDocs = lazy(() => import("./pages/ApiDocs"));
 const AnalyticsPage = lazy(() => import("./pages/AnalyticsPage"));
+const ChatbotSettingsPage = lazy(() => import("./pages/ChatbotSettingsPage"));
 
 function App() {
   return (
@@ -86,6 +87,15 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Profile />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/settings/:id"
+              element={
+                <ProtectedRoute>
+                  <ChatbotSettingsPage />
                 </ProtectedRoute>
               }
             />

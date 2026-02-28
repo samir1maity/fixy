@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Copy, Eye, EyeOff, PenSquare, Loader2, BarChart2 } from 'lucide-react';
+import { Copy, Eye, EyeOff, PenSquare, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { toast as sonnerToast } from 'sonner';
@@ -50,8 +50,11 @@ const WebsiteCard = ({ website, isPending = false }: WebsiteCardProps) => {
         </span>
       );
     } else {
-      return website.status === 'completed' ? 'Active' : 
-             website.status === 'pending' || website.status === 'embedding' ? 'Processing' : 'Issues';
+      return website.status === "completed"
+        ? "Active"
+        : website.status === "pending" || website.status === "embedding"
+          ? "Processing"
+          : "Issues";
     }
   };
 
@@ -155,31 +158,19 @@ const WebsiteCard = ({ website, isPending = false }: WebsiteCardProps) => {
         </div>
       )}
       
-      <div className="mt-4 flex justify-between items-center gap-2">
-        {website.status === 'completed' ? (
-          <div className="flex items-center gap-2 w-full">
-            <Link to={`/analytics/${website.id}`} className="flex-1">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full gap-1.5 text-muted-foreground hover:text-foreground"
-              >
-                <BarChart2 className="h-3.5 w-3.5" />
-                Analytics
-              </Button>
-            </Link>
-            <Link to={`/chat/${website.id}`} className="flex-1">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full border-primary text-primary hover:bg-primary hover:text-white"
-              >
-                Test Chatbot
-              </Button>
-            </Link>
-          </div>
-        ) : null}
-      </div>
+      {website.status === 'completed' && (
+        <div className="mt-4">
+          <Link to={`/chat/${website.id}`}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full border-primary text-primary hover:bg-primary hover:text-white"
+            >
+              Test Chatbot
+            </Button>
+          </Link>
+        </div>
+      )}
     </motion.div>
   );
 };

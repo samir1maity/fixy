@@ -39,7 +39,12 @@ model Website {
   status        String    @default("pending")
   maxPages      Int?      @default(100)
   updatedAt     DateTime  @updatedAt
-  api_secret    String?
+  api_secret          String?
+  widgetPrimaryColor  String?
+  widgetBotName       String?
+  widgetAvatarUrl     String?
+  widgetWelcomeMsg    String?
+  widgetPosition      String?  // "bottom-right" | "bottom-left"
 
   Pages            Page[]
   ChatInteractions ChatInteraction[]

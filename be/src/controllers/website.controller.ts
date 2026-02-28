@@ -1,23 +1,40 @@
 import { Request, Response } from 'express';
-import { generateSecret, getWebsiteInfoService, getWebsitesService, registerWebsite as registerWebsiteService } from '../services/website.service.js';
+import { generateSecret, getWebsiteInfoService, getWebsitesService, getWidgetConfigService, registerWebsite as registerWebsiteService, updateWidgetConfigService } from '../services/website.service.js';
+import * as websiteValidation from '../zod/website.js';
 
-// Register a new website
 export const registerWebsite = async (req: Request, res: Response) => {
   try {
-    const { url } = req.body;
-    const customerId = req.user?.userId;
-    
-    if (!url || !customerId) {
+    const parsedCustomerId = websiteValidation.customerIdSchema.safeParse(req.user?.userId);
+    if (!parsedCustomerId.success) {
       res.status(400).json({ error: 'Missing required parameters' });
       return;
     }
-    
-    const websiteId = await registerWebsiteService(customerId, url);
-    
+
+    const customerId = parsedCustomerId.data;
+
+    const { url, name, textContent } = req.body;
+    const file = (req as any).file as Express.Multer.File | undefined;
+
+    const parsedOptions = websiteValidation.registerWebsiteOptionsSchema.safeParse({
+      name,
+      url,
+      textContent,
+      fileBuffer: file?.buffer,
+      fileName: file?.originalname,
+    });
+    if (!parsedOptions.success) {
+      res.status(400).json({ error: parsedOptions.error.issues[0]?.message || 'Invalid request data' });
+      return;
+    }
+    const options = parsedOptions.data;
+
+    const result = await registerWebsiteService(customerId, options);
+
     res.status(201).json({
-      websiteId,
+      id: result.id,
+      api_secret: result.api_secret,
       status: 'pending',
-      message: 'Website registration successful. Processing started.'
+      message: 'Processing started.'
     });
   } catch (error) {
     console.error('Website registration error:', error);
@@ -28,16 +45,16 @@ export const registerWebsite = async (req: Request, res: Response) => {
 
 export const getWebsites = async (req: Request, res: Response) => {
   try {
-    const customerId = req.user?.userId;
-    
-    if (!customerId || typeof customerId !== 'string') {
+    const parsedCustomerId = websiteValidation.customerIdSchema.safeParse(req.user?.userId);
+    if (!parsedCustomerId.success) {
       res.status(400).json({ error: 'Missing required parameters' });
       return;
     }
+
+    const customerId = parsedCustomerId.data;
     
     const websites = await getWebsitesService(customerId);
     
-    // For each failed website, add a generic error message if not already present
     const websitesWithMessages = websites.map((website : any) => {
       if (website.status === 'failed') {
         return {
@@ -57,14 +74,15 @@ export const getWebsites = async (req: Request, res: Response) => {
 
 export const getWebsiteInfo = async (req: Request, res: Response) => {
   try {
-    const id = Number(req?.params?.id);
-    if (!id || isNaN(Number(id))) {
+    const parsedId = websiteValidation.websiteIdParamSchema.safeParse(req?.params?.id);
+    if (!parsedId.success) {
       res.status(400).json({ error: 'Missing required parameters' }); 
       return;
     }
+
+    const id = parsedId.data;
     const website = await getWebsiteInfoService(id);
     
-    // Add a generic error message if the website failed and no message is present
     if (website && website.status === 'failed' && !website.statusMessage) {
       website.statusMessage = "Processing failed. Please try a different website or contact support.";
     }
@@ -79,11 +97,13 @@ export const getWebsiteInfo = async (req: Request, res: Response) => {
 
 export const regenerateSecret = async (req: Request, res: Response) => {
   try {
-    const id = Number(req?.params?.id);
-    if (!id || isNaN(Number(id))) {
+    const parsedId = websiteValidation.websiteIdParamSchema.safeParse(req?.params?.id);
+    if (!parsedId.success) {
       res.status(400).json({ error: 'Missing required parameters' });
       return;
     }
+
+    const id = parsedId.data;
     const secret = await generateSecret(id);
     res.json({ secret });
   } catch (error) {
@@ -91,3 +111,54 @@ export const regenerateSecret = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to generate secret' });
   }
 }
+
+export const getWidgetConfig = async (req: Request, res: Response) => {
+  try {
+    const parsedId = websiteValidation.websiteIdParamSchema.safeParse(req?.params?.id);
+    if (!parsedId.success) {
+      res.status(400).json({ error: 'Missing required parameters' });
+      return;
+    }
+
+    const id = parsedId.data;
+    const website = await getWidgetConfigService(id);
+    if (!website) {
+      res.status(404).json({ error: 'Website not found' });
+      return;
+    }
+    res.json({
+      botName: website.widgetBotName || 'Support Bot',
+      primaryColor: website.widgetPrimaryColor || '#6366f1',
+      avatarUrl: website.widgetAvatarUrl || null,
+      welcomeMessage: website.widgetWelcomeMsg || 'Hi! How can I help you today?',
+      position: website.widgetPosition || 'bottom-right',
+      apiSecret: website.api_secret,
+      websiteId: website.id,
+    });
+  } catch (error) {
+    console.error('Get widget config error:', error);
+    res.status(500).json({ error: 'Failed to get widget config' });
+  }
+};
+
+export const updateWidgetConfig = async (req: Request, res: Response) => {
+  try {
+    const parsedId = websiteValidation.websiteIdParamSchema.safeParse(req?.params?.id);
+    if (!parsedId.success) {
+      res.status(400).json({ error: 'Missing required parameters' });
+      return;
+    }
+    
+    const id = parsedId.data;
+    const parsedWidgetConfig = websiteValidation.widgetConfigSchema.safeParse(req.body);
+    if (!parsedWidgetConfig.success) {
+      res.status(400).json({ error: parsedWidgetConfig.error.issues[0]?.message || 'Invalid request data' });
+      return;
+    }
+    await updateWidgetConfigService(id, parsedWidgetConfig.data);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Update widget config error:', error);
+    res.status(500).json({ error: 'Failed to update widget config' });
+  }
+};

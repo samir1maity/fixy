@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
-import AppLayout from '@/components/layout/app-layout';
+import AppShell from '@/components/layout/AppShell';
 
 const Profile = () => {
   const { toast } = useToast();
@@ -40,7 +40,7 @@ const Profile = () => {
   };
 
   return (
-    <AppLayout scope="main">
+    <AppShell>
       <div className="flex items-center mb-6">
         <h1 className="text-2xl font-bold">Your Profile</h1>
       </div>
@@ -156,7 +156,7 @@ const Profile = () => {
           </motion.form>
         </div>
       </div>
-    </AppLayout>
+    </AppShell>
   );
 };
 

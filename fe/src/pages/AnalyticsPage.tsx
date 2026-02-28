@@ -1,22 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend,
 } from 'recharts';
 import {
-  ArrowLeft, MessageSquare, TrendingUp, Clock, Activity,
+  MessageSquare, TrendingUp, Clock, Activity,
   ChevronDown, ChevronUp, Bot, User, Calendar, Zap, BarChart2,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import AppLayout from '@/components/layout/app-layout';
+import AppShell from '@/components/layout/AppShell';
 import analyticsApiService, {
   WebsiteAnalytics, ChatSession, ChatMessage,
 } from '@/services/analytics-api';
 import websiteApiService, { Website } from '@/services/website-api';
 import { fadeUp, staggerContainer } from '@/lib/motion';
+import PageProjectSwitcher from '@/components/common/PageProjectSwitcher';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -299,7 +299,7 @@ const AnalyticsPage = () => {
   // ── Loading skeleton ──────────────────────────────────────────────────────
   if (loading) {
     return (
-      <AppLayout scope="main">
+      <AppShell>
         <div className="space-y-4 animate-pulse">
           <div className="h-8 w-48 bg-muted rounded-lg" />
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -308,12 +308,12 @@ const AnalyticsPage = () => {
           <div className="h-64 bg-muted rounded-xl" />
           <div className="h-64 bg-muted rounded-xl" />
         </div>
-      </AppLayout>
+      </AppShell>
     );
   }
 
   return (
-    <AppLayout scope="main">
+    <AppShell>
       <motion.div
         variants={staggerContainer(0.07, 0.05)}
         initial="hidden"
@@ -323,20 +323,13 @@ const AnalyticsPage = () => {
         {/* ── Header ── */}
         <motion.div variants={fadeUp()} className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
-            <Link to="/dashboard">
-              <Button variant="ghost" size="sm" className="gap-1.5">
-                <ArrowLeft className="h-4 w-4" /> Back
-              </Button>
-            </Link>
             <div>
               <h1 className="text-xl font-bold flex items-center gap-2">
                 <BarChart2 className="h-5 w-5 text-primary" />
                 Analytics
               </h1>
-              {website && (
-                <p className="text-xs text-muted-foreground mt-0.5">{website.domain}</p>
-              )}
             </div>
+            <PageProjectSwitcher currentId={websiteId} section="analytics" />
           </div>
 
           <div className="flex gap-1.5 bg-muted rounded-lg p-1">
@@ -550,7 +543,7 @@ const AnalyticsPage = () => {
           </div>
         </motion.div>
       </motion.div>
-    </AppLayout>
+    </AppShell>
   );
 };
 
