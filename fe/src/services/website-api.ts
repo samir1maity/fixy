@@ -46,6 +46,21 @@ export const websiteApiService = {
     regenerateSecret: async (websiteId: number): Promise<{ secret: string }> => {
         return apiService.get<{ secret: string }>(`/websites/${websiteId}/secret`);
     },
+    updateKnowledge: async (
+        websiteId: number,
+        mode: 'reset' | 'append',
+        payload: { file?: File; textContent?: string }
+    ): Promise<{ status: string; message: string }> => {
+        const body = new FormData();
+        body.append('mode', mode);
+        if (payload.file) body.append('file', payload.file);
+        if (payload.textContent) body.append('textContent', payload.textContent);
+        return apiService.patch<{ status: string; message: string }>(
+            `/websites/${websiteId}/knowledge`,
+            body,
+            { headers: { 'Content-Type': 'multipart/form-data' } }
+        );
+    },
 }
 
 export default websiteApiService;

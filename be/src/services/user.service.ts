@@ -189,9 +189,10 @@ export async function updateProfile(
   }
   
   const updateData: any = {};
-  
+
   if (validatedData.name) updateData.name = validatedData.name;
   if (validatedData.email) updateData.email = validatedData.email;
+  if (validatedData.orgName !== undefined) updateData.orgName = validatedData.orgName;
   if (validatedData.newPassword) {
     updateData.password = await bcrypt.hash(validatedData.newPassword, 10);
   }

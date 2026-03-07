@@ -55,13 +55,13 @@ const HeroSection = () => {
                 <ArrowRight size={16} className="ml-2" />
               </Button>
               
-              <Button 
+              {/* <Button 
                 variant="outline" 
                 size="lg"
                 className="border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 min-w-[180px] rounded-xl"
               >
                 Watch Demo
-              </Button>
+              </Button> */}
             </motion.div>
           </motion.div>
           

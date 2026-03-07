@@ -245,11 +245,15 @@ const Dashboard = () => {
         
         {/* Always show websites once initial load is complete */}
         {initialLoadComplete && filteredWebsites.map((website) => (
-          <WebsiteCard 
-            key={website.id} 
-            website={website} 
+          <WebsiteCard
+            key={website.id}
+            website={website}
             isPending={pendingWebsites.includes(website.id)}
             isPolling={isPolling}
+            onKnowledgeUpdated={() => {
+              setPendingWebsites(prev => [...prev, website.id]);
+              startPolling();
+            }}
           />
         ))}
         

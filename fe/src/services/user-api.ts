@@ -1,11 +1,13 @@
 import apiService from './api';
 
-// Define types for your API responses
 export interface User {
   id: string;
   name: string;
   email: string;
-  // Add other user properties
+  orgName?: string | null;
+  role: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface LoginRequest {
@@ -18,35 +20,42 @@ export interface LoginResponse {
   token: string;
 }
 
-// Base path for user-related endpoints
+export interface UpdateProfileRequest {
+  name?: string;
+  email?: string;
+  orgName?: string;
+  currentPassword?: string;
+  newPassword?: string;
+}
+
 const BASE_PATH = '/users';
 
-// Function-based User API service
 export const userApiService = {
-  // Get current user
   getCurrentUser: async (): Promise<User> => {
     return apiService.get<User>(`${BASE_PATH}/me`);
   },
 
-  // Login
+  getProfile: async (): Promise<User> => {
+    const res = await apiService.get<{ user: User }>(`${BASE_PATH}/profile`);
+    return res.user;
+  },
+
+  updateProfile: async (data: UpdateProfileRequest): Promise<User> => {
+    const res = await apiService.put<{ user: User; message: string }>(`${BASE_PATH}/profile`, data);
+    return res.user;
+  },
+
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
     return apiService.post<LoginResponse>(`${BASE_PATH}/login`, credentials);
   },
 
-  // Register
-  register: async (userData: Omit<User, 'id'> & { password: string }): Promise<LoginResponse> => {
+  register: async (userData: Omit<User, 'id' | 'role' | 'createdAt' | 'updatedAt'> & { password: string }): Promise<LoginResponse> => {
     return apiService.post<LoginResponse>(`${BASE_PATH}/signup`, userData);
   },
 
-  // Update user
-  updateUser: async (userId: string, userData: Partial<User>): Promise<User> => {
-    return apiService.put<User>(`${BASE_PATH}/${userId}`, userData);
-  },
-
-  // Delete user
   deleteUser: async (userId: string): Promise<void> => {
     return apiService.delete<void>(`${BASE_PATH}/${userId}`);
   }
 };
 
-export default userApiService; 
+export default userApiService;

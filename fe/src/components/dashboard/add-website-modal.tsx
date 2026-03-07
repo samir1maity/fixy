@@ -178,8 +178,10 @@ const AddWebsiteModal = ({ isOpen, onClose, onSubmit, loading }: AddWebsiteModal
                   value={name}
                   onChange={e => setName(e.target.value)}
                   disabled={loading}
+                  maxLength={50}
                   className="w-full h-9 text-sm"
                 />
+                <p className="text-xs text-gray-400 mt-1 text-right">{name.length}/50</p>
               </div>
 
               {/* Tabs */}

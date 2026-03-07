@@ -4,7 +4,7 @@ export const customerIdSchema = z.string().trim().min(1, 'Missing required param
 export const websiteIdParamSchema = z.coerce.number().int().positive('Missing required parameters');
 
 export const registerWebsiteOptionsSchema = z.object({
-  name: z.string().trim().min(1).optional(),
+  name: z.string().trim().min(1, 'Name is required'),
   url: z.string().trim().min(1).optional(),
   textContent: z.string().trim().min(1).optional(),
   fileBuffer: z.instanceof(Buffer).optional(),

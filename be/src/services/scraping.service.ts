@@ -265,7 +265,9 @@ export async function scrapeWebsiteRecursively(
             data: {
               websiteId,
               url,
-              title: scrapedData.title || url
+              title: scrapedData.title || url,
+              status: 'scraped',
+              lastCrawledAt: new Date(),
             }
           });
           
@@ -309,6 +311,11 @@ export async function scrapeWebsiteRecursively(
         
       } catch (error) {
         console.error(`Error processing ${url}:`, error);
+        await prisma.page.upsert({
+          where: { url },
+          create: { websiteId, url, status: 'failed' },
+          update: { status: 'failed' },
+        });
       }
     }
     

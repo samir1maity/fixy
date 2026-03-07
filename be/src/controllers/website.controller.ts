@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { generateSecret, getWebsiteInfoService, getWebsitesService, getWidgetConfigService, registerWebsite as registerWebsiteService, updateWidgetConfigService } from '../services/website.service.js';
+import { generateSecret, getWebsiteInfoService, getWebsitesService, getWidgetConfigService, registerWebsite as registerWebsiteService, updateKnowledgeService, updateWidgetConfigService } from '../services/website.service.js';
 import * as websiteValidation from '../zod/website.js';
 
 export const registerWebsite = async (req: Request, res: Response) => {
@@ -160,5 +160,41 @@ export const updateWidgetConfig = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Update widget config error:', error);
     res.status(500).json({ error: 'Failed to update widget config' });
+  }
+};
+
+export const updateKnowledge = async (req: Request, res: Response) => {
+  try {
+    const parsedId = websiteValidation.websiteIdParamSchema.safeParse(req?.params?.id);
+    if (!parsedId.success) {
+      res.status(400).json({ error: 'Missing required parameters' });
+      return;
+    }
+
+    const mode = req.body.mode as string;
+    if (mode !== 'reset' && mode !== 'append') {
+      res.status(400).json({ error: 'mode must be "reset" or "append"' });
+      return;
+    }
+
+    const file = (req as any).file as Express.Multer.File | undefined;
+    const textContent = req.body.textContent as string | undefined;
+
+    if (!file && !textContent?.trim()) {
+      res.status(400).json({ error: 'Provide a file or text content' });
+      return;
+    }
+
+    await updateKnowledgeService(parsedId.data, mode, {
+      fileBuffer: file?.buffer,
+      fileName: file?.originalname,
+      textContent,
+    });
+
+    res.json({ status: 'pending', message: 'Knowledge update started.' });
+  } catch (error) {
+    console.error('Update knowledge error:', error);
+    const msg = error instanceof Error ? error.message : 'Failed to update knowledge';
+    res.status(400).json({ error: msg });
   }
 };

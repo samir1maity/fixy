@@ -182,6 +182,26 @@ async function processAllEmbeddings(websiteId: number): Promise<void> {
   }
 }
 
+export async function updateKnowledgeService(
+  websiteId: number,
+  mode: 'reset' | 'append',
+  opts: { fileBuffer?: Buffer; fileName?: string; textContent?: string }
+): Promise<void> {
+  const website = await prisma.website.findUnique({ where: { id: websiteId } });
+  if (!website) throw new Error('Website not found');
+
+  if (mode === 'reset') {
+    await prisma.page.deleteMany({ where: { websiteId } });
+  }
+
+  await prisma.website.update({ where: { id: websiteId }, data: { status: 'pending' } });
+
+  processUploadedContent(websiteId, opts).catch(error => {
+    console.error(`Error in updateKnowledge for website ${websiteId}:`, error);
+    prisma.website.update({ where: { id: websiteId }, data: { status: 'failed' } }).catch(console.error);
+  });
+}
+
 export async function getWebsitesService(userId: string){
 
   if(!userId) {

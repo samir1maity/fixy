@@ -133,11 +133,12 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
        return;
     }
     
-    const { name, email, currentPassword, newPassword } = req.body;
-    
+    const { name, email, orgName, currentPassword, newPassword } = req.body;
+
     const updatedUser = await userService.updateProfile(req.user.userId, {
       name,
       email,
+      orgName,
       currentPassword,
       newPassword
     });
