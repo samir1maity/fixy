@@ -35,6 +35,7 @@ const ChatbotSettingsPage = () => {
   const [settings, setSettings] = useState<WidgetSettings>(DEFAULT_SETTINGS);
   const [savedSettings, setSavedSettings] = useState<WidgetSettings>(DEFAULT_SETTINGS);
   const [isSaving, setIsSaving] = useState(false);
+  const [apiSecret, setApiSecret] = useState<string>('');
   const [isCopied, setIsCopied] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -54,6 +55,7 @@ const ChatbotSettingsPage = () => {
         };
         setSettings(loaded);
         setSavedSettings(loaded);
+        setApiSecret(info.api_secret || '');
       } catch {
         sonnerToast.error('Failed to load website info');
       } finally {
@@ -83,7 +85,7 @@ const ChatbotSettingsPage = () => {
     }
   };
 
-  const embedScript = `<script\n  src="${apiBaseUrl}/widget.js"\n  data-website-id="${id}"\n  data-api-url="${apiBaseUrl}"\n  async\n></script>`;
+  const embedScript = `<script\n  src="${apiBaseUrl}/widget.js"\n  data-website-id="${id}"\n  data-api-url="${apiBaseUrl}"\n  data-api-secret="${apiSecret}"\n  async\n></script>`;
 
   const handleCopyEmbed = () => {
     navigator.clipboard.writeText(embedScript);

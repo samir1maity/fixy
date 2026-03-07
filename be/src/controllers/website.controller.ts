@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { generateSecret, getWebsiteInfoService, getWebsitesService, getWidgetConfigService, registerWebsite as registerWebsiteService, updateKnowledgeService, updateWidgetConfigService } from '../services/website.service.js';
+import { assertWebsiteOwner, generateSecret, getWebsiteInfoService, getWebsitesService, getWidgetConfigService, registerWebsite as registerWebsiteService, updateKnowledgeService, updateWidgetConfigService } from '../services/website.service.js';
 import * as websiteValidation from '../zod/website.js';
 
 export const registerWebsite = async (req: Request, res: Response) => {
@@ -81,15 +81,21 @@ export const getWebsiteInfo = async (req: Request, res: Response) => {
     }
 
     const id = parsedId.data;
+    await assertWebsiteOwner(id, req.user!.userId);
     const website = await getWebsiteInfoService(id);
-    
+
     if (website && website.status === 'failed' && !website.statusMessage) {
       website.statusMessage = "Processing failed. Please try a different website or contact support.";
     }
-    
+
     res.json(website);
   } catch (error) {
-    console.error('Get website info error:', error);  
+    const status = (error as any)?.status;
+    if (status === 403 || status === 404) {
+      res.status(status).json({ error: (error as Error).message });
+      return;
+    }
+    console.error('Get website info error:', error);
     res.status(500).json({ error: 'Failed to get website info' });
   }
 };
@@ -104,9 +110,15 @@ export const regenerateSecret = async (req: Request, res: Response) => {
     }
 
     const id = parsedId.data;
+    await assertWebsiteOwner(id, req.user!.userId);
     const secret = await generateSecret(id);
     res.json({ secret });
   } catch (error) {
+    const status = (error as any)?.status;
+    if (status === 403 || status === 404) {
+      res.status(status).json({ error: (error as Error).message });
+      return;
+    }
     console.error('Generate secret error:', error);
     res.status(500).json({ error: 'Failed to generate secret' });
   }
@@ -132,8 +144,6 @@ export const getWidgetConfig = async (req: Request, res: Response) => {
       avatarUrl: website.widgetAvatarUrl || null,
       welcomeMessage: website.widgetWelcomeMsg || 'Hi! How can I help you today?',
       position: website.widgetPosition || 'bottom-right',
-      apiSecret: website.api_secret,
-      websiteId: website.id,
     });
   } catch (error) {
     console.error('Get widget config error:', error);
@@ -150,6 +160,7 @@ export const updateWidgetConfig = async (req: Request, res: Response) => {
     }
     
     const id = parsedId.data;
+    await assertWebsiteOwner(id, req.user!.userId);
     const parsedWidgetConfig = websiteValidation.widgetConfigSchema.safeParse(req.body);
     if (!parsedWidgetConfig.success) {
       res.status(400).json({ error: parsedWidgetConfig.error.issues[0]?.message || 'Invalid request data' });
@@ -158,6 +169,11 @@ export const updateWidgetConfig = async (req: Request, res: Response) => {
     await updateWidgetConfigService(id, parsedWidgetConfig.data);
     res.json({ success: true });
   } catch (error) {
+    const status = (error as any)?.status;
+    if (status === 403 || status === 404) {
+      res.status(status).json({ error: (error as Error).message });
+      return;
+    }
     console.error('Update widget config error:', error);
     res.status(500).json({ error: 'Failed to update widget config' });
   }
@@ -170,6 +186,8 @@ export const updateKnowledge = async (req: Request, res: Response) => {
       res.status(400).json({ error: 'Missing required parameters' });
       return;
     }
+
+    await assertWebsiteOwner(parsedId.data, req.user!.userId);
 
     const mode = req.body.mode as string;
     if (mode !== 'reset' && mode !== 'append') {
@@ -193,6 +211,11 @@ export const updateKnowledge = async (req: Request, res: Response) => {
 
     res.json({ status: 'pending', message: 'Knowledge update started.' });
   } catch (error) {
+    const status = (error as any)?.status;
+    if (status === 403 || status === 404) {
+      res.status(status).json({ error: (error as Error).message });
+      return;
+    }
     console.error('Update knowledge error:', error);
     const msg = error instanceof Error ? error.message : 'Failed to update knowledge';
     res.status(400).json({ error: msg });

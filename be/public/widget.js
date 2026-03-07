@@ -8,6 +8,7 @@
 
   var WEBSITE_ID = script.getAttribute('data-website-id');
   var API_URL = (script.getAttribute('data-api-url') || '').replace(/\/$/, '');
+  var API_SECRET = script.getAttribute('data-api-secret') || '';
 
   if (!WEBSITE_ID || !API_URL) {
     console.error('[Fixy Widget] Missing data-website-id or data-api-url on script tag.');
@@ -283,7 +284,7 @@
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-secret': config.apiSecret,
+        'x-api-secret': API_SECRET,
       },
       body: body,
     })
@@ -326,7 +327,6 @@
           primaryColor: '#6366f1',
           welcomeMessage: 'Hi! How can I help you today?',
           position: 'bottom-right',
-          apiSecret: '',
         });
       });
   }

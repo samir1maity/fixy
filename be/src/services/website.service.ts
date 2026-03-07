@@ -234,6 +234,15 @@ export async function generateSecret(websiteId: number): Promise<string> {
   return secret;
 }
 
+export async function assertWebsiteOwner(websiteId: number, userId: string): Promise<void> {
+  const website = await prisma.website.findUnique({
+    where: { id: websiteId },
+    select: { customerId: true },
+  });
+  if (!website) throw Object.assign(new Error('Website not found'), { status: 404 });
+  if (website.customerId !== userId) throw Object.assign(new Error('Access denied'), { status: 403 });
+}
+
 export async function getWidgetConfigService(websiteId: number) {
   return prisma.website.findUnique({
     where: { id: websiteId },
