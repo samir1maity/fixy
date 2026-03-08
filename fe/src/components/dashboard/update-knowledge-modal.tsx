@@ -170,7 +170,7 @@ const UpdateKnowledgeModal = ({
 
                 {mode === 'reset' && (
                   <p className="mt-2 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-md px-3 py-2">
-                    All existing pages, chunks and embeddings will be permanently deleted before processing the new content.
+                    All existing knowledge will be permanently cleared and rebuilt from the new content.
                   </p>
                 )}
               </div>

@@ -32,6 +32,51 @@
     return String(text).replace(/[&<>"']/g, function (m) { return map[m]; });
   }
 
+  function renderMarkdown(text) {
+    var lines = String(text).split('\n');
+    var html = '';
+    var inUl = false, inOl = false;
+
+    function closeList() {
+      if (inUl) { html += '</ul>'; inUl = false; }
+      if (inOl) { html += '</ol>'; inOl = false; }
+    }
+
+    function inlineFormat(line) {
+      return line
+        .replace(/[&<>"']/g, function(m) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]; })
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    }
+
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i];
+      var trimmed = line.trim();
+
+      if (!trimmed) { closeList(); html += ''; continue; }
+
+      if (/^###\s+(.+)/.test(trimmed)) {
+        closeList();
+        html += '<h3>' + inlineFormat(trimmed.replace(/^###\s+/, '')) + '</h3>';
+      } else if (/^##\s+(.+)/.test(trimmed)) {
+        closeList();
+        html += '<h3>' + inlineFormat(trimmed.replace(/^##\s+/, '')) + '</h3>';
+      } else if (/^- (.+)/.test(trimmed)) {
+        if (!inUl) { closeList(); html += '<ul>'; inUl = true; }
+        html += '<li>' + inlineFormat(trimmed.replace(/^- /, '')) + '</li>';
+      } else if (/^\d+\. (.+)/.test(trimmed)) {
+        if (!inOl) { closeList(); html += '<ol>'; inOl = true; }
+        html += '<li>' + inlineFormat(trimmed.replace(/^\d+\. /, '')) + '</li>';
+      } else {
+        closeList();
+        html += '<p>' + inlineFormat(trimmed) + '</p>';
+      }
+    }
+    closeList();
+    return html;
+  }
+
   function hexToRgb(hex) {
     var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? parseInt(result[1], 16) + ', ' + parseInt(result[2], 16) + ', ' + parseInt(result[3], 16) : '99, 102, 241';
@@ -43,11 +88,12 @@
     var isLeft = position === 'bottom-left';
     var side = isLeft ? 'left: 20px;' : 'right: 20px;';
 
+    var oppositeSide = isLeft ? 'right:unset;' : 'left:unset;';
     var css = [
-      '#fixy-widget-btn{position:fixed;bottom:20px;' + side + 'width:56px;height:56px;border-radius:50%;background:' + primaryColor + ';border:none;cursor:pointer;z-index:2147483646;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(' + rgb + ',0.45);transition:transform .2s,box-shadow .2s;}',
+      '#fixy-widget-btn{position:fixed;bottom:20px;' + side + oppositeSide + 'width:56px;height:56px;border-radius:50%;background:' + primaryColor + ';border:none;cursor:pointer;z-index:2147483646;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(' + rgb + ',0.45);transition:transform .2s,box-shadow .2s;}',
       '#fixy-widget-btn:hover{transform:scale(1.08);box-shadow:0 6px 22px rgba(' + rgb + ',0.55);}',
       '#fixy-widget-btn svg{width:26px;height:26px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}',
-      '#fixy-widget-panel{position:fixed;bottom:88px;' + side + 'width:370px;max-width:calc(100vw - 28px);height:520px;max-height:calc(100vh - 110px);border-radius:16px;background:#fff;box-shadow:0 8px 40px rgba(0,0,0,.18);z-index:2147483645;display:flex;flex-direction:column;overflow:hidden;transition:opacity .22s,transform .22s;opacity:0;transform:translateY(12px) scale(.97);pointer-events:none;}',
+      '#fixy-widget-panel{position:fixed;bottom:88px;' + side + oppositeSide + 'width:370px;max-width:calc(100vw - 28px);height:520px;max-height:calc(100vh - 110px);border-radius:16px;background:#fff;box-shadow:0 8px 40px rgba(0,0,0,.18);z-index:2147483645;display:flex;flex-direction:column;overflow:hidden;transition:opacity .22s,transform .22s;opacity:0;transform:translateY(12px) scale(.97);pointer-events:none;}',
       '#fixy-widget-panel.fixy-open{opacity:1;transform:translateY(0) scale(1);pointer-events:all;}',
       '#fixy-widget-header{background:' + primaryColor + ';padding:14px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;}',
       '#fixy-widget-avatar{width:38px;height:38px;border-radius:50%;object-fit:cover;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}',
@@ -66,9 +112,20 @@
       '.fixy-msg{max-width:82%;word-break:break-word;font-size:14px;line-height:1.55;}',
       '.fixy-msg-bot{align-self:flex-start;}',
       '.fixy-msg-user{align-self:flex-end;}',
-      '.fixy-bubble{padding:9px 13px;border-radius:16px;white-space:pre-wrap;}',
+      '.fixy-bubble{padding:10px 14px;border-radius:16px;}',
       '.fixy-msg-bot .fixy-bubble{background:#f3f4f6;color:#111827;border-bottom-left-radius:4px;}',
-      '.fixy-msg-user .fixy-bubble{background:' + primaryColor + ';color:#fff;border-bottom-right-radius:4px;}',
+      '.fixy-msg-user .fixy-bubble{background:' + primaryColor + ';color:#fff;border-bottom-right-radius:4px;white-space:pre-wrap;}',
+      '.fixy-msg-bot .fixy-bubble{text-align:left;}',
+      '.fixy-msg-bot .fixy-bubble p{margin:0 0 6px;line-height:1.55;text-align:left;}',
+      '.fixy-msg-bot .fixy-bubble p:last-child{margin-bottom:0;}',
+      '.fixy-msg-bot .fixy-bubble ul,.fixy-msg-bot .fixy-bubble ol{margin:4px 0 6px;padding-left:20px;text-align:left;}',
+      '.fixy-msg-bot .fixy-bubble li{margin-bottom:3px;line-height:1.5;text-align:left;}',
+      '.fixy-msg-bot .fixy-bubble ul li{list-style:disc;}',
+      '.fixy-msg-bot .fixy-bubble ol li{list-style:decimal;}',
+      '.fixy-msg-bot .fixy-bubble h3{font-size:13px;font-weight:700;margin:10px 0 4px;text-align:left;color:#111827;}',
+      '.fixy-msg-bot .fixy-bubble h3:first-child{margin-top:0;}',
+      '.fixy-msg-bot .fixy-bubble strong{font-weight:600;}',
+      '.fixy-msg-bot .fixy-bubble code{background:#e5e7eb;border-radius:4px;padding:1px 5px;font-size:12px;font-family:monospace;}',
       '.fixy-time{font-size:11px;color:#9ca3af;margin-top:3px;}',
       '.fixy-msg-bot .fixy-time{text-align:left;}',
       '.fixy-msg-user .fixy-time{text-align:right;}',
@@ -88,7 +145,7 @@
       '#fixy-powered{font-size:10px;color:#9ca3af;text-align:center;padding:4px 0 6px;flex-shrink:0;}',
       '#fixy-powered a{color:#6b7280;text-decoration:none;}',
       '#fixy-powered a:hover{text-decoration:underline;}',
-      '@media(max-width:420px){#fixy-widget-panel{width:calc(100vw - 20px);' + (isLeft ? 'left:10px;' : 'right:10px;') + 'border-radius:12px;}}',
+      '@media(max-width:420px){#fixy-widget-panel{width:calc(100vw - 20px);' + (isLeft ? 'left:10px;right:unset;' : 'right:10px;left:unset;') + 'border-radius:12px;}}',
     ].join('\n');
 
     var style = document.createElement('style');
@@ -235,7 +292,7 @@
     wrapper.className = 'fixy-msg fixy-msg-' + msg.role;
     wrapper.dataset.id = msg.id;
     wrapper.innerHTML =
-      '<div class="fixy-bubble">' + escapeHtml(msg.text) + '</div>' +
+      '<div class="fixy-bubble">' + (msg.role === 'bot' ? renderMarkdown(msg.text) : escapeHtml(msg.text)) + '</div>' +
       '<div class="fixy-time">' + timeStr + '</div>';
     messagesEl.appendChild(wrapper);
   }

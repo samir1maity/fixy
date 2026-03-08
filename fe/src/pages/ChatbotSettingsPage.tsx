@@ -345,7 +345,10 @@ const ChatbotSettingsPage = () => {
                       {/* Widget preview */}
                       <div
                         className="absolute bottom-3"
-                        style={{ [settings.widgetPosition === 'bottom-left' ? 'left' : 'right']: '12px' }}
+                        style={{
+                          left: settings.widgetPosition === 'bottom-left' ? '12px' : 'unset',
+                          right: settings.widgetPosition === 'bottom-right' ? '12px' : 'unset',
+                        }}
                       >
                         {/* Chat panel preview */}
                         <div
@@ -390,7 +393,7 @@ const ChatbotSettingsPage = () => {
                         </div>
 
                         {/* Floating button */}
-                        <div className="flex justify-end">
+                        <div className={`flex ${settings.widgetPosition === 'bottom-left' ? 'justify-start' : 'justify-end'}`}>
                           <div
                             className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg"
                             style={{ backgroundColor: settings.widgetPrimaryColor }}
