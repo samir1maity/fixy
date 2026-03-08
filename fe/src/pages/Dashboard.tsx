@@ -169,8 +169,8 @@ const Dashboard = () => {
     }
   };
   
-  const filteredWebsites = websites.filter(website => 
-    website.domain.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredWebsites = websites.filter(website =>
+    (website.name || website.domain).toLowerCase().includes(searchQuery.toLowerCase())
   );
   
   const handleRefresh = () => {

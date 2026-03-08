@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CheckCircle2, EyeIcon, EyeOffIcon, Lock, Mail, User } from "lucide-react";
+import { CheckCircle2, Building, EyeIcon, EyeOffIcon, Lock, Mail, User } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
 import { useApi } from "@/hooks/use-api";
 import userApiService from "@/services/user-api";
@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/auth-context";
 
 const Signup = () => {
   const [name, setName] = useState("");
+  const [orgName, setOrgName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -18,7 +19,7 @@ const Signup = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
-  const { loading, error, execute } = useApi({
+  const { loading, execute } = useApi({
     showErrorToast: true,
     errorMessage: "Login failed. Please check your credentials.",
   });
@@ -46,7 +47,7 @@ const Signup = () => {
     }
 
     const result = await execute(
-      () => userApiService.register({ name, email, password }),
+      () => userApiService.register({ name, orgName: orgName || undefined, email, password }),
       {
         showSuccessToast: true,
         successMessage: "Account created successfully!",
@@ -114,6 +115,19 @@ const Signup = () => {
             </div>
           </div>
           
+          <div className="space-y-2">
+            <div className="relative">
+              <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+              <Input
+                type="text"
+                placeholder="Organisation name (optional)"
+                value={orgName}
+                onChange={(e) => setOrgName(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+
           <div className="space-y-2">
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />

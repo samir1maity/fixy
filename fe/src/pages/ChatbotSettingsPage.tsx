@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Copy, Check, Palette, Code2, Bot, AlignLeft, Layout } from 'lucide-react';
+import { Copy, Check, Palette, Code2, Bot, AlignLeft, Layout, AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -38,32 +38,39 @@ const ChatbotSettingsPage = () => {
   const [apiSecret, setApiSecret] = useState<string>('');
   const [isCopied, setIsCopied] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   const apiBaseUrl = config.apiBaseUrl ? config.apiBaseUrl : '';
 
-  useEffect(() => {
+  const loadSettings = useCallback(async () => {
     if (!id) return;
-    const load = async () => {
-      try {
-        const info = await websiteApiService.getWebsiteInfo(Number(id));
-        const loaded: WidgetSettings = {
-          widgetBotName: info.widgetBotName || DEFAULT_SETTINGS.widgetBotName,
-          widgetPrimaryColor: info.widgetPrimaryColor || DEFAULT_SETTINGS.widgetPrimaryColor,
-          widgetAvatarUrl: info.widgetAvatarUrl || '',
-          widgetWelcomeMsg: info.widgetWelcomeMsg || DEFAULT_SETTINGS.widgetWelcomeMsg,
-          widgetPosition: (info.widgetPosition as 'bottom-right' | 'bottom-left') || DEFAULT_SETTINGS.widgetPosition,
-        };
-        setSettings(loaded);
-        setSavedSettings(loaded);
-        setApiSecret(info.api_secret || '');
-      } catch {
-        sonnerToast.error('Failed to load website info');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    load();
+    setIsLoading(true);
+    setLoadError(false);
+    setSettings(DEFAULT_SETTINGS);
+    setSavedSettings(DEFAULT_SETTINGS);
+    setApiSecret('');
+    try {
+      const info = await websiteApiService.getWebsiteInfo(Number(id));
+      const loaded: WidgetSettings = {
+        widgetBotName: info.widgetBotName || DEFAULT_SETTINGS.widgetBotName,
+        widgetPrimaryColor: info.widgetPrimaryColor || DEFAULT_SETTINGS.widgetPrimaryColor,
+        widgetAvatarUrl: info.widgetAvatarUrl || '',
+        widgetWelcomeMsg: info.widgetWelcomeMsg || DEFAULT_SETTINGS.widgetWelcomeMsg,
+        widgetPosition: (info.widgetPosition as 'bottom-right' | 'bottom-left') || DEFAULT_SETTINGS.widgetPosition,
+      };
+      setSettings(loaded);
+      setSavedSettings(loaded);
+      setApiSecret(info.api_secret || '');
+    } catch {
+      setLoadError(true);
+    } finally {
+      setIsLoading(false);
+    }
   }, [id]);
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
   const handleSave = async () => {
     if (!id) return;
@@ -100,6 +107,30 @@ const ChatbotSettingsPage = () => {
       <AppShell>
         <div className="flex items-center justify-center py-20">
           <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <AppShell>
+        <div className="mb-6 flex items-center gap-3 flex-wrap">
+          <h1 className="text-2xl font-bold">Widget Settings</h1>
+          <PageProjectSwitcher currentId={id!} section="settings" />
+        </div>
+        <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+            <AlertCircle className="h-6 w-6 text-destructive" />
+          </div>
+          <div>
+            <p className="font-medium">Failed to load settings</p>
+            <p className="text-sm text-muted-foreground mt-1">Could not connect to the server. Please check your connection and try again.</p>
+          </div>
+          <Button variant="outline" size="sm" className="gap-2" onClick={loadSettings}>
+            <RefreshCw className="h-3.5 w-3.5" />
+            Try again
+          </Button>
         </div>
       </AppShell>
     );

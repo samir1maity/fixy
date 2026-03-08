@@ -6,9 +6,11 @@ import {
   Settings2,
   CircleUser,
   KeyRound,
+  Lock,
   LogOut,
   X,
 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/auth-context';
@@ -54,38 +56,57 @@ const ProjectNavItem = ({
   icon,
   label,
   firstWebsiteId,
+  overrideTo,
 }: {
   section: 'analytics' | 'settings';
   activeId: string | null;
   icon: React.ReactNode;
   label: string;
   firstWebsiteId: string | null;
+  overrideTo?: string;
 }) => {
   const navigate = useNavigate();
-  const isActive = !!activeId; // active when we're on this section
+  const isActive = !!activeId;
+  const isLocked = !firstWebsiteId && !activeId;
 
   const handleClick = () => {
+    if (overrideTo) { navigate(overrideTo); return; }
     const target = activeId ?? firstWebsiteId;
-    if (target) {
-      navigate(`/${section}/${target}`);
-    }
-    // if no websites exist at all, do nothing (button stays inert)
+    if (target) navigate(`/${section}/${target}`);
   };
 
-  return (
+  const btn = (
     <button
       onClick={handleClick}
+      disabled={isLocked}
       className={cn(
         'w-full flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
         isActive
           ? 'bg-primary/10 text-primary'
-          : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+          : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+        isLocked && 'opacity-40 cursor-not-allowed hover:bg-transparent hover:text-muted-foreground'
       )}
     >
       <span className="h-4 w-4 shrink-0">{icon}</span>
       {label}
+      {isLocked && <Lock className="ml-auto h-3 w-3 shrink-0" />}
     </button>
   );
+
+  if (isLocked) {
+    return (
+      <TooltipProvider delayDuration={200}>
+        <Tooltip>
+          <TooltipTrigger asChild>{btn}</TooltipTrigger>
+          <TooltipContent side="right">
+            <p>Add a project first to access {label}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  return btn;
 };
 
 // ── Sidebar body ───────────────────────────────────────────────────────────
@@ -144,10 +165,13 @@ const SidebarBody = ({
           label="Settings"
           firstWebsiteId={firstWebsiteId}
         />
-        <NavItem
-          to="/api-keys"
+        <ProjectNavItem
+          section="settings"
+          activeId={null}
           icon={<KeyRound className="h-4 w-4" />}
           label="API Keys"
+          firstWebsiteId={firstWebsiteId}
+          overrideTo="/api-keys"
         />
         <NavItem
           to="/profile"

@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Copy, Loader2, RefreshCw } from 'lucide-react';
+import { Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { toast as sonnerToast } from 'sonner';
 import UpdateKnowledgeModal from './update-knowledge-modal';
 
 interface WebsiteCardProps {
@@ -25,14 +24,6 @@ interface WebsiteCardProps {
 
 const WebsiteCard = ({ website, isPending = false, onKnowledgeUpdated }: WebsiteCardProps) => {
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
-
-  const handleCopyDomain = () => {
-    navigator.clipboard.writeText(website.domain);
-    sonnerToast.success("Domain copied", {
-      position: "top-right",
-      duration: 3000,
-    });
-  };
 
   const getStatusDisplay = () => {
     if (isPending) {
@@ -60,16 +51,7 @@ const WebsiteCard = ({ website, isPending = false, onKnowledgeUpdated }: Website
       >
         <div className="flex justify-between items-start">
           <div>
-            <h3 className="text-lg font-semibold mb-0.5 truncate max-w-[200px]" title={website.name}>{website.name}</h3>
-            <div className="flex items-center text-muted-foreground">
-              <span className="text-xs sm:text-sm">{website.domain}</span>
-              <button
-                onClick={handleCopyDomain}
-                className="ml-1.5 text-muted-foreground hover:text-foreground"
-              >
-                <Copy className="h-3.5 w-3.5" />
-              </button>
-            </div>
+            <h3 className="text-lg font-semibold truncate max-w-[200px]" title={website.name}>{website.name}</h3>
           </div>
 
           <div className="flex justify-end">

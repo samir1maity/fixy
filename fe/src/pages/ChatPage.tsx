@@ -16,7 +16,7 @@ import AppShell from '@/components/layout/AppShell';
 const ChatPage = () => {
   const { id } = useParams<{ id: string }>();
   const [input, setInput] = useState('');
-  const [websiteInfo, setWebsiteInfo] = useState<{ domain: string; api_secret?: string } | null>(null);
+  const [websiteInfo, setWebsiteInfo] = useState<{ name?: string; domain: string; api_secret?: string } | null>(null);
   const [apiSecret, setApiSecret] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -44,7 +44,7 @@ const ChatPage = () => {
         }
         
         if (messages.length === 0) {
-          addMessage('assistant', `👋 Hi there! I'm your AI assistant for ${response.domain || 'your website'}. How can I help you today?`);
+          addMessage('assistant', `👋 Hi there! I'm your AI assistant for ${response.name || response.domain || 'your website'}. How can I help you today?`);
         }
       } catch (error) {
         toast({
@@ -106,8 +106,8 @@ const ChatPage = () => {
     });
     
     setTimeout(() => {
-      const domain = websiteInfo?.domain || 'your website';
-      addMessage('assistant', `👋 Hi there! I'm your AI assistant for ${domain}. How can I help you today?`);
+      const siteName = websiteInfo?.name || websiteInfo?.domain || 'your website';
+      addMessage('assistant', `👋 Hi there! I'm your AI assistant for ${siteName}. How can I help you today?`);
     }, 100);
   };
 
@@ -120,7 +120,7 @@ const ChatPage = () => {
               <h1 className="text-2xl font-bold">Test Chatbot</h1>
               {websiteInfo && (
                 <span className="ml-3 text-sm text-muted-foreground truncate">
-                  {websiteInfo.domain}
+                  {websiteInfo.name || websiteInfo.domain}
                 </span>
               )}
             </div>

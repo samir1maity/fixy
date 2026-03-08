@@ -11,12 +11,6 @@ import {
 import websiteApiService, { Website } from '@/services/website-api';
 import { cn } from '@/lib/utils';
 
-const DUMMY_WEBSITES: Website[] = [
-  { id: 1, name: 'My Blog', domain: 'myblog.com', status: 'completed', chatbotActive: true, requestsToday: 12, requestsTotal: 340, lastChecked: '', api_secret: '' },
-  { id: 2, name: 'E-commerce Store', domain: 'mystore.com', status: 'completed', chatbotActive: true, requestsToday: 5, requestsTotal: 120, lastChecked: '', api_secret: '' },
-  { id: 3, name: 'Portfolio', domain: 'myportfolio.dev', status: 'pending', chatbotActive: false, requestsToday: 0, requestsTotal: 0, lastChecked: '', api_secret: '' },
-];
-
 interface PageProjectSwitcherProps {
   /** The currently active website id (from useParams) */
   currentId: string | number;
@@ -31,8 +25,8 @@ const PageProjectSwitcher = ({ currentId, section }: PageProjectSwitcherProps) =
   useEffect(() => {
     websiteApiService
       .getWebsites()
-      .then((data) => setWebsites(data?.length ? data : DUMMY_WEBSITES))
-      .catch(() => setWebsites(DUMMY_WEBSITES));
+      .then((data) => setWebsites(data ?? []))
+      .catch(() => setWebsites([]));
   }, []);
 
   const current = websites.find((w) => String(w.id) === String(currentId));
