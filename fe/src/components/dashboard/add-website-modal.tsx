@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Globe, Loader2, Upload, FileText, Link } from 'lucide-react';
+import { X, Globe, Loader2, Upload, FileText, Link, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -23,6 +23,7 @@ interface AddWebsiteModalProps {
   onSubmit: (data: AddWebsiteFormData) => Promise<void>;
   loading: boolean;
   error: Error | null;
+  pdfEnabled?: boolean;
 }
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
@@ -31,7 +32,7 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'text', label: 'Paste Text', icon: <FileText className="h-4 w-4" /> },
 ];
 
-const AddWebsiteModal = ({ isOpen, onClose, onSubmit, loading }: AddWebsiteModalProps) => {
+const AddWebsiteModal = ({ isOpen, onClose, onSubmit, loading, pdfEnabled = false }: AddWebsiteModalProps) => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<Tab>('url');
   const [name, setName] = useState('');
@@ -186,22 +187,28 @@ const AddWebsiteModal = ({ isOpen, onClose, onSubmit, loading }: AddWebsiteModal
 
               {/* Tabs */}
               <div className="flex rounded-lg border overflow-hidden">
-                {TABS.map(tab => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    disabled={loading}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium transition-colors ${
-                      activeTab === tab.id
-                        ? 'bg-primary text-white'
-                        : 'bg-transparent text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
-                    }`}
-                  >
-                    {tab.icon}
-                    <span className="hidden sm:inline">{tab.label}</span>
-                  </button>
-                ))}
+                {TABS.map(tab => {
+                  const isFileLocked = tab.id === 'file' && !pdfEnabled;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      disabled={loading || isFileLocked}
+                      onClick={() => !isFileLocked && setActiveTab(tab.id)}
+                      title={isFileLocked ? 'PDF upload is disabled. Use URL or Paste Text.' : undefined}
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium transition-colors ${
+                        isFileLocked
+                          ? 'opacity-40 cursor-not-allowed bg-transparent text-gray-400 dark:text-gray-600'
+                          : activeTab === tab.id
+                            ? 'bg-primary text-white'
+                            : 'bg-transparent text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+                      }`}
+                    >
+                      {isFileLocked ? <Lock className="h-4 w-4" /> : tab.icon}
+                      <span className="hidden sm:inline">{tab.label}</span>
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Tab content */}

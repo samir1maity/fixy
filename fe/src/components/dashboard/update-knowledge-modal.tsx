@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { X, Upload, FileText, RefreshCw, PlusCircle, Loader2 } from 'lucide-react';
+import { X, Upload, FileText, RefreshCw, PlusCircle, Loader2, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -12,6 +12,7 @@ interface UpdateKnowledgeModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  pdfEnabled?: boolean;
 }
 
 type Mode = 'reset' | 'append';
@@ -23,6 +24,7 @@ const UpdateKnowledgeModal = ({
   isOpen,
   onClose,
   onSuccess,
+  pdfEnabled = false,
 }: UpdateKnowledgeModalProps) => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -178,22 +180,28 @@ const UpdateKnowledgeModal = ({
                 {([
                   { id: 'file' as Tab, label: 'Upload File', icon: <Upload className="h-4 w-4" /> },
                   { id: 'text' as Tab, label: 'Paste Text', icon: <FileText className="h-4 w-4" /> },
-                ]).map(t => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    disabled={loading}
-                    onClick={() => setTab(t.id)}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium transition-colors ${
-                      tab === t.id
-                        ? 'bg-primary text-white'
-                        : 'bg-transparent text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
-                    }`}
-                  >
-                    {t.icon}
-                    <span>{t.label}</span>
-                  </button>
-                ))}
+                ]).map(t => {
+                  const isFileLocked = t.id === 'file' && !pdfEnabled;
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      disabled={loading || isFileLocked}
+                      onClick={() => !isFileLocked && setTab(t.id)}
+                      title={isFileLocked ? 'PDF upload is disabled. Use Paste Text.' : undefined}
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium transition-colors ${
+                        isFileLocked
+                          ? 'opacity-40 cursor-not-allowed bg-transparent text-gray-400 dark:text-gray-600'
+                          : tab === t.id
+                            ? 'bg-primary text-white'
+                            : 'bg-transparent text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+                      }`}
+                    >
+                      {isFileLocked ? <Lock className="h-4 w-4" /> : t.icon}
+                      <span>{t.label}</span>
+                    </button>
+                  );
+                })}
               </div>
 
               {/* File drop zone */}

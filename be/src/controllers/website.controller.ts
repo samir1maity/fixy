@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { assertWebsiteOwner, generateSecret, getWebsiteInfoService, getWebsitesService, getWidgetConfigService, registerWebsite as registerWebsiteService, updateKnowledgeService, updateWidgetConfigService } from '../services/website.service.js';
+import { assertWebsiteOwner, generateSecret, getWebsiteInfoService, getWebsitesService, getWidgetConfigService, isPdfEnabled, registerWebsite as registerWebsiteService, updateKnowledgeService, updateWidgetConfigService } from '../services/website.service.js';
 import * as websiteValidation from '../zod/website.js';
 
 export const registerWebsite = async (req: Request, res: Response) => {
@@ -14,6 +14,11 @@ export const registerWebsite = async (req: Request, res: Response) => {
 
     const { url, name, textContent } = req.body;
     const file = (req as any).file as Express.Multer.File | undefined;
+
+    if (file && file.mimetype === 'application/pdf') {
+      res.status(403).json({ error: 'PDF uploads are currently disabled. Please use a URL or paste text.' });
+      return;
+    }
 
     const parsedOptions = websiteValidation.registerWebsiteOptionsSchema.safeParse({
       name,
@@ -55,16 +60,13 @@ export const getWebsites = async (req: Request, res: Response) => {
     
     const websites = await getWebsitesService(customerId);
     
-    const websitesWithMessages = websites.map((website : any) => {
-      if (website.status === 'failed') {
-        return {
-          ...website,
-          statusMessage: "Processing failed. Please try a different website or contact support."
-        };
-      }
-      return website;
-    });
-    
+    const pdfEnabled = isPdfEnabled();
+    const websitesWithMessages = websites.map((website : any) => ({
+      ...website,
+      pdfEnabled,
+      ...(website.status === 'failed' && { statusMessage: "Processing failed. Please try a different website or contact support." }),
+    }));
+
     res.json(websitesWithMessages);
   } catch (error) { 
     console.error('Get websites error:', error);
@@ -88,7 +90,7 @@ export const getWebsiteInfo = async (req: Request, res: Response) => {
       website.statusMessage = "Processing failed. Please try a different website or contact support.";
     }
 
-    res.json(website);
+    res.json({ ...website, pdfEnabled: isPdfEnabled() });
   } catch (error) {
     const status = (error as any)?.status;
     if (status === 403 || status === 404) {
@@ -179,6 +181,10 @@ export const updateWidgetConfig = async (req: Request, res: Response) => {
   }
 };
 
+export const getPdfStatus = (_req: Request, res: Response) => {
+  res.json({ pdfEnabled: isPdfEnabled() });
+};
+
 export const updateKnowledge = async (req: Request, res: Response) => {
   try {
     const parsedId = websiteValidation.websiteIdParamSchema.safeParse(req?.params?.id);
@@ -197,6 +203,11 @@ export const updateKnowledge = async (req: Request, res: Response) => {
 
     const file = (req as any).file as Express.Multer.File | undefined;
     const textContent = req.body.textContent as string | undefined;
+
+    if (file && file.mimetype === 'application/pdf' && !isPdfEnabled()) {
+      res.status(403).json({ error: 'PDF uploads are currently disabled. Please use text content instead.' });
+      return;
+    }
 
     if (!file && !textContent?.trim()) {
       res.status(400).json({ error: 'Provide a file or text content' });

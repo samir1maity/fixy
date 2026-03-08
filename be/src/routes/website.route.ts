@@ -1,6 +1,6 @@
 import { Router } from "express";
 import multer from "multer";
-import { getWebsiteInfo, getWebsites, getWidgetConfig, regenerateSecret, registerWebsite, updateKnowledge, updateWidgetConfig } from "../controllers/website.controller.js";
+import { getWebsiteInfo, getWebsites, regenerateSecret, registerWebsite, updateKnowledge, updateWidgetConfig } from "../controllers/website.controller.js";
 import { authenticate } from "../middlewares/auth.middleware.js";
 
 const websiteRouter = Router();

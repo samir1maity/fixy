@@ -256,3 +256,7 @@ export async function updateWidgetConfigService(websiteId: number, config: Widge
     data: validatedConfig
   });
 }
+
+export function isPdfEnabled(): boolean {
+  return process.env.PDF_UPLOAD_ENABLED === 'true';
+}

@@ -11,6 +11,7 @@ export interface Website {
   requestsTotal: number;
   lastChecked: string;
   api_secret: string;
+  pdfEnabled?: boolean;
 }
 
 export interface WidgetConfig {

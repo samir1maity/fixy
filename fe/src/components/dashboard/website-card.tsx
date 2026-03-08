@@ -16,6 +16,7 @@ interface WebsiteCardProps {
     requestsTotal: number;
     api_secret: string;
     statusMessage?: string;
+    pdfEnabled?: boolean;
   };
   isPending?: boolean;
   isPolling?: boolean;
@@ -122,6 +123,7 @@ const WebsiteCard = ({ website, isPending = false, onKnowledgeUpdated }: Website
         isOpen={isUpdateModalOpen}
         onClose={() => setIsUpdateModalOpen(false)}
         onSuccess={() => { onKnowledgeUpdated?.(); }}
+        pdfEnabled={website.pdfEnabled ?? false}
       />
     </>
   );

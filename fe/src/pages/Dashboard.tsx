@@ -285,6 +285,7 @@ const Dashboard = () => {
         onSubmit={handleSubmitWebsite}
         loading={websitesLoading}
         error={websitesLoading ? new Error("Error registering website") : null}
+        pdfEnabled={websites[0]?.pdfEnabled ?? false}
       />
     </AppShell>
   );
