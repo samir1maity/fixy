@@ -56,6 +56,7 @@ const ProjectNavItem = ({
   icon,
   label,
   firstWebsiteId,
+  websitesLoaded,
   overrideTo,
 }: {
   section: 'analytics' | 'settings';
@@ -63,11 +64,12 @@ const ProjectNavItem = ({
   icon: React.ReactNode;
   label: string;
   firstWebsiteId: string | null;
+  websitesLoaded: boolean;
   overrideTo?: string;
 }) => {
   const navigate = useNavigate();
   const isActive = !!activeId;
-  const isLocked = !firstWebsiteId && !activeId;
+  const isLocked = websitesLoaded && !firstWebsiteId && !activeId;
 
   const handleClick = () => {
     if (overrideTo) { navigate(overrideTo); return; }
@@ -119,6 +121,7 @@ const SidebarBody = ({
 }) => {
   const { logout, user } = useAuth();
   const [firstWebsiteId, setFirstWebsiteId] = useState<string | null>(null);
+  const [websitesLoaded, setWebsitesLoaded] = useState(false);
 
   // Fetch website list once to know where to navigate when no project is active
   useEffect(() => {
@@ -127,7 +130,8 @@ const SidebarBody = ({
       .then((data) => {
         if (data?.length) setFirstWebsiteId(String(data[0].id));
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setWebsitesLoaded(true));
   }, []);
 
   return (
@@ -157,6 +161,7 @@ const SidebarBody = ({
           icon={<BarChart2 className="h-4 w-4" />}
           label="Analytics"
           firstWebsiteId={firstWebsiteId}
+          websitesLoaded={websitesLoaded}
         />
         <ProjectNavItem
           section="settings"
@@ -164,6 +169,7 @@ const SidebarBody = ({
           icon={<Settings2 className="h-4 w-4" />}
           label="Settings"
           firstWebsiteId={firstWebsiteId}
+          websitesLoaded={websitesLoaded}
         />
         <ProjectNavItem
           section="settings"
@@ -171,6 +177,7 @@ const SidebarBody = ({
           icon={<KeyRound className="h-4 w-4" />}
           label="API Keys"
           firstWebsiteId={firstWebsiteId}
+          websitesLoaded={websitesLoaded}
           overrideTo="/api-keys"
         />
         <NavItem

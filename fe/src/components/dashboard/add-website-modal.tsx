@@ -174,7 +174,7 @@ const AddWebsiteModal = ({ isOpen, onClose, onSubmit, loading }: AddWebsiteModal
                 </label>
                 <Input
                   type="text"
-                  placeholder="e.g. My Company Docs"
+                  placeholder="e.g. Website Name"
                   value={name}
                   onChange={e => setName(e.target.value)}
                   disabled={loading}
