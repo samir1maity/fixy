@@ -2,20 +2,34 @@ import { prisma } from '../configs/db.js';
 import { retrieveSimilarChunks } from './embedding.service.js';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import config from '../configs/config.js';
+import { LEAD_INTENT_KEYWORDS } from '../constants/lead.constants.js';
 
 const genAI = new GoogleGenerativeAI(config.ai.api_key);
 
+export function detectLeadIntent(query: string): { detected: boolean; intentType: string } {
+  const lower = query.toLowerCase();
+  for (const [intent, keywords] of Object.entries(LEAD_INTENT_KEYWORDS)) {
+    if (keywords.some((kw) => lower.includes(kw))) {
+      return { detected: true, intentType: intent };
+    }
+  }
+  return { detected: false, intentType: '' };
+}
+
 export async function generateChatResponse(
-  query: string, 
+  query: string,
   websiteId: number,
-  chatHistory: Array<{role: string, content: string}> = []
-): Promise<{ 
-  answer: string; 
-  sources: Array<{ url: string; title: string; relevance: number }>; 
+  chatHistory: Array<{ role: string; content: string }> = []
+): Promise<{
+  answer: string;
+  sources: Array<{ url: string; title: string; relevance: number }>;
   followupQuestions?: string[];
+  intentDetected: boolean;
+  intentType: string;
 }> {
+  const { detected: intentDetected, intentType } = detectLeadIntent(query);
   const relevantChunks = await retrieveSimilarChunks(query, websiteId, 3);
-  
+
   if (relevantChunks.length === 0) {
     return {
       answer: "Hmm, I'm drawing a blank on that one! 🤔 Could you try asking in a different way? I'm eager to help but might need a hint to point me in the right direction!",
@@ -24,7 +38,9 @@ export async function generateChatResponse(
         "Would you like me to tell you what topics I know about this website?",
         "Can I help you find something else instead?",
         "Maybe we could start with a more general question?"
-      ]
+      ],
+      intentDetected,
+      intentType,
     };
   }
   
@@ -170,13 +186,17 @@ export async function generateChatResponse(
     return {
       answer: response,
       sources: uniqueSources,
-      followupQuestions: followupQuestions.slice(0, 3)
+      followupQuestions: followupQuestions.slice(0, 3),
+      intentDetected,
+      intentType,
     };
   } catch (error) {
     console.error('Error calling Gemini API:', error);
     return {
       answer: "Oops! 😅 I seem to be having a moment. My circuits got a bit tangled. Could we try that again in a second?",
-      sources: uniqueSources
+      sources: uniqueSources,
+      intentDetected,
+      intentType,
     };
   }
 }

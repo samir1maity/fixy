@@ -22,6 +22,28 @@
   var isOpen = false;
   var isLoading = false;
 
+  // Lead collection state
+  var leadMode = false;
+  var leadCaptured = false; 
+  var leadStep = null; 
+  var leadIntent = '';
+  var leadData = { name: '', email: '', message: '' };
+  var conversationSnippet = [];
+
+  var LEAD_STEPS = {
+    ASK_NAME: 'ask_name',
+    ASK_EMAIL: 'ask_email',
+    ASK_MESSAGE: 'ask_message',
+    DONE: 'done',
+  };
+
+  var LEAD_PROMPTS = {
+    ask_name: "I'd love to connect you with our team! What's your name?",
+    ask_email: "Thanks! What's the best email address to reach you?",
+    ask_message: "Got it! Briefly, what are you looking for or any specific requirements?",
+    done: "Perfect! I've passed your details to the team and they'll be in touch soon. Is there anything else I can help you with?",
+  };
+
   // ── Helpers ────────────────────────────────────────────────────────────────
   function generateId() {
     return Math.random().toString(36).slice(2);
@@ -318,6 +340,111 @@
     if (el) el.scrollTop = el.scrollHeight;
   }
 
+  // ── Lead collection helpers ────────────────────────────────────────────────
+  function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  function isValidName(name) {
+    return name.trim().length >= 2;
+  }
+
+  function startLeadMode(intentType) {
+    leadMode = true;
+    leadStep = LEAD_STEPS.ASK_NAME;
+    leadIntent = intentType || 'general';
+    leadData = { name: '', email: '', message: '' };
+    // Snapshot current conversation — answers will be appended as they come in
+    conversationSnippet = messages.slice(-6).map(function (m) {
+      return (m.role === 'bot' ? 'Bot: ' : 'You: ') + m.text;
+    });
+    setTimeout(function () {
+      appendMessage('bot', LEAD_PROMPTS[LEAD_STEPS.ASK_NAME]);
+    }, 400);
+  }
+
+  function submitLead() {
+    var sendBtn = document.getElementById('fixy-widget-send');
+
+    isLoading = true;
+    if (sendBtn) sendBtn.disabled = true;
+    showTyping();
+
+    var payload = JSON.stringify({
+      visitorName: leadData.name,
+      visitorEmail: leadData.email,
+      message: leadData.message,
+      detectedIntent: leadIntent,
+      conversationSnippet: conversationSnippet.join('\n'),
+      sourcePage: window.location.href,
+    });
+
+    fetch(API_URL + '/api/v1/leads', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-secret': API_SECRET,
+      },
+      body: payload,
+    })
+      .then(function (res) {
+        hideTyping();
+        if (res.ok) {
+          leadCaptured = true;
+          appendMessage('bot', LEAD_PROMPTS[LEAD_STEPS.DONE]);
+        } else {
+          leadStep = LEAD_STEPS.ASK_MESSAGE;
+          appendMessage('bot', "Sorry, something went wrong saving your details. Could you try again?");
+        }
+      })
+      .catch(function () {
+        hideTyping();
+        leadStep = LEAD_STEPS.ASK_MESSAGE;
+        appendMessage('bot', "Couldn't connect right now. Could you resend your message?");
+      })
+      .finally(function () {
+        isLoading = false;
+        if (leadCaptured) {
+          leadMode = false;
+          leadStep = null;
+        }
+        if (sendBtn) sendBtn.disabled = false;
+      });
+  }
+
+  function handleLeadStep(text) {
+    if (leadStep === LEAD_STEPS.ASK_NAME) {
+      if (!isValidName(text)) {
+        appendMessage('bot', "Could you share your full name? (at least 2 characters)");
+        return;
+      }
+      leadData.name = text;
+      conversationSnippet.push('You: ' + text);
+      leadStep = LEAD_STEPS.ASK_EMAIL;
+      appendMessage('bot', LEAD_PROMPTS[LEAD_STEPS.ASK_EMAIL]);
+      return;
+    }
+
+    if (leadStep === LEAD_STEPS.ASK_EMAIL) {
+      if (!isValidEmail(text)) {
+        appendMessage('bot', "Hmm, that doesn't look like a valid email. Could you double-check it?");
+        return;
+      }
+      leadData.email = text;
+      conversationSnippet.push('You: ' + text);
+      leadStep = LEAD_STEPS.ASK_MESSAGE;
+      appendMessage('bot', LEAD_PROMPTS[LEAD_STEPS.ASK_MESSAGE]);
+      return;
+    }
+
+    if (leadStep === LEAD_STEPS.ASK_MESSAGE) {
+      leadData.message = text;
+      conversationSnippet.push('You: ' + text);
+      leadStep = LEAD_STEPS.DONE;
+      submitLead();
+    }
+  }
+
   // ── Send message ───────────────────────────────────────────────────────────
   function handleSend() {
     var input = document.getElementById('fixy-widget-input');
@@ -330,6 +457,11 @@
     input.value = '';
     input.style.height = 'auto';
     appendMessage('user', text);
+
+    if (leadMode && leadStep && leadStep !== LEAD_STEPS.DONE) {
+      handleLeadStep(text);
+      return;
+    }
 
     isLoading = true;
     sendBtn.disabled = true;
@@ -354,6 +486,10 @@
         }
         var reply = data.response || data.answer || 'Sorry, I could not get a response.';
         appendMessage('bot', reply);
+
+        if (data.intentDetected && !leadMode && !leadCaptured) {
+          startLeadMode(data.intentType);
+        }
       })
       .catch(function () {
         hideTyping();

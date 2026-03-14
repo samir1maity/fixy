@@ -10,6 +10,13 @@ interface Config {
     api_key: string;
     model: string | undefined;
   };
+  email: {
+    host: string | undefined;
+    port: number;
+    user: string | undefined;
+    password: string | undefined;
+    from: string | undefined;
+  };
 }
 
 const config: Config = {
@@ -23,6 +30,13 @@ const config: Config = {
   ai: {
     api_key: (process.env.GEMINI_API_KEY as string) ?? '',
     model: process.env.MODEL as string,
+  },
+  email: {
+    host: process.env.EMAIL_HOST,
+    port: parseInt(process.env.EMAIL_PORT || '587'),
+    user: process.env.EMAIL_USER,
+    password: process.env.EMAIL_PASSWORD,
+    from: process.env.EMAIL_FROM,
   },
 };
 

@@ -10,6 +10,8 @@ import config from "./configs/config.js"
 import type { CorsOptions } from "cors";
 import widgetPublicRouter from "./routes/widget-public.route.js";
 import websitePublicRouter from "./routes/website-public.route.js";
+import leadPublicRouter from "./routes/lead-public.route.js";
+import leadRouter from "./routes/lead.route.js";
 
 const app = express();
 app.use(express.json());
@@ -48,11 +50,13 @@ app.get('/',(req,res)=>{
 })
 
 app.use('/api/v1/chat', cors(chatCorsOptions), chatRouter)
+app.use('/api/v1/leads', cors(chatCorsOptions), leadPublicRouter);
 app.use('/widget.js', cors(chatCorsOptions), widgetPublicRouter);
 app.use('/api/v1/public/websites', cors(chatCorsOptions), websitePublicRouter);
 app.use(cors(dashboardCorsOptions));
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/websites', websiteRouter);
+app.use('/api/v1/websites/:websiteId/leads', leadRouter);
 app.use('/api/v1/analytics', analyticsRouter);
 
 

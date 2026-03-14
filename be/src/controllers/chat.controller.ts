@@ -20,7 +20,11 @@ export const chat = async (req: Request, res: Response) => {
     const response = await generateChatResponse(query, websiteId, chatHistory);
 
     res.json({
-      ...response,
+      answer: response.answer,
+      sources: response.sources,
+      followupQuestions: response.followupQuestions,
+      intentDetected: response.intentDetected,
+      intentType: response.intentType,
       sessionId: sessionId || generateSessionId(),
     });
   } catch (error) {

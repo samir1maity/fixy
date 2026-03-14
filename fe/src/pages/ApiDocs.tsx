@@ -19,7 +19,7 @@ const ApiDocs = () => {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<string>('getting-started');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const baseUrl = config.apiBaseUrl || 'https://api.fixy.iamsamir.space';
+  const baseUrl = config.apiUrl
   const sections = API_DOCS_SECTIONS;
 
   const sectionRefs = useRef<{ [key: string]: HTMLElement | null }>({});

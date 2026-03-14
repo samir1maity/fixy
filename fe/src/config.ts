@@ -1,7 +1,8 @@
-// Configuration values for the application
+const BASE_URL = (import.meta.env.VITE_API_URL as string) || '';
+
 const config = {
-  apiBaseUrl: import.meta.env.VITE_API_URL,
-  // Add other configuration values here
+  baseUrl: BASE_URL,
+  apiUrl: `${BASE_URL}/api/v1`,
 };
 
-export default config; 
+export default config;

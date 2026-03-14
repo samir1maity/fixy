@@ -40,7 +40,8 @@ const ChatbotSettingsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
-  const apiBaseUrl = config.apiBaseUrl ? config.apiBaseUrl : '';
+  const baseUrl = config.baseUrl || '';
+  const apiUrl = config.apiUrl || '';
 
   const loadSettings = useCallback(async () => {
     if (!id) return;
@@ -92,7 +93,7 @@ const ChatbotSettingsPage = () => {
     }
   };
 
-  const embedScript = `<script\n  src="${apiBaseUrl}/widget.js"\n  data-website-id="${id}"\n  data-api-url="${apiBaseUrl}"\n  data-api-secret="${apiSecret}"\n  async\n></script>`;
+  const embedScript = `<script\n  src="${baseUrl}/widget.js"\n  data-website-id="${id}"\n  data-api-url="${baseUrl}"\n  data-api-secret="${apiSecret}"\n  async\n></script>`;
 
   const handleCopyEmbed = () => {
     navigator.clipboard.writeText(embedScript);
@@ -480,7 +481,7 @@ const ChatbotSettingsPage = () => {
                   </div>
                   <div>
                     <Label className="text-xs text-muted-foreground uppercase tracking-wider">API Endpoint</Label>
-                    <div className="mt-1 font-mono bg-muted rounded px-3 py-2 text-sm break-all">{apiBaseUrl}/api/v1/chat</div>
+                    <div className="mt-1 font-mono bg-muted rounded px-3 py-2 text-sm break-all">{apiUrl}/chat</div>
                   </div>
                   <div className="pt-1">
                     <Link to="/docs">
