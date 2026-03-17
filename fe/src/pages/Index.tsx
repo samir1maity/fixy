@@ -47,7 +47,7 @@ const Index = () => {
         <HowItWorks />
         <ServicesSection />
         <PricingSection />
-        <CTASection />
+        {/* <CTASection /> */}
       </main>
       
       <Footer />

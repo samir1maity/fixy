@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fadeIn, staggerContainer } from '@/lib/motion';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Minus, Zap } from 'lucide-react';
+import { CheckCircle, Minus, Zap, Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface PlanFeature {
@@ -126,10 +126,12 @@ const PricingCard = ({
   plan,
   isAnnual,
   index,
+  locked,
 }: {
   plan: Plan;
   isAnnual: boolean;
   index: number;
+  locked: boolean;
 }) => {
   const price = isAnnual ? plan.annualPrice : plan.monthlyPrice;
 
@@ -139,13 +141,23 @@ const PricingCard = ({
       initial="hidden"
       whileInView="show"
       viewport={{ once: true, amount: 0.15 }}
-      whileHover={{ y: -6, transition: { duration: 0.25 } }}
+      whileHover={locked ? {} : { y: -6, transition: { duration: 0.25 } }}
       className={`relative flex flex-col rounded-2xl overflow-hidden transition-shadow ${
         plan.highlight
           ? 'border-2 border-fixy-accent shadow-2xl shadow-fixy-accent/20 bg-white dark:bg-gray-900'
           : 'border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm hover:shadow-lg'
       }`}
     >
+      {/* Lock overlay */}
+      {locked && (
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 backdrop-blur-sm bg-white/60 dark:bg-gray-900/60 rounded-2xl">
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-5 py-4 flex flex-col items-center gap-2 shadow-lg">
+            <Lock className="w-6 h-6 text-gray-400 dark:text-gray-500" />
+            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Coming Soon</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 text-center">This plan will be available soon</p>
+          </div>
+        </div>
+      )}
       {/* Top gradient bar */}
       <div className={`h-1 bg-gradient-to-r ${plan.accent}`} />
 
@@ -228,6 +240,7 @@ const PricingCard = ({
 
 const PricingSection = () => {
   const [isAnnual, setIsAnnual] = useState(false);
+  const plansUnlocked = false; // toggle to true in code to unlock paid plans
 
   return (
     <section id="pricing" className="py-24 relative overflow-hidden">
@@ -306,7 +319,7 @@ const PricingSection = () => {
           className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6"
         >
           {plans.map((plan, i) => (
-            <PricingCard key={plan.name} plan={plan} isAnnual={isAnnual} index={i} />
+            <PricingCard key={plan.name} plan={plan} isAnnual={isAnnual} index={i} locked={plan.name !== 'Free' && !plansUnlocked} />
           ))}
         </motion.div>
 
