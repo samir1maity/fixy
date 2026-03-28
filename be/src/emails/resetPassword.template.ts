@@ -27,9 +27,6 @@ export function resetPasswordEmail({ name, email, resetUrl, expiryMinutes }: Res
                   <td style="background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:10px;width:40px;height:40px;text-align:center;vertical-align:middle;">
                     <span style="color:#ffffff;font-size:22px;font-weight:700;line-height:40px;">F</span>
                   </td>
-                  <td style="padding-left:10px;vertical-align:middle;">
-                    <span style="font-size:22px;font-weight:700;background:linear-gradient(135deg,#6366f1,#8b5cf6);-webkit-background-clip:text;color:#6366f1;">Fixy</span>
-                  </td>
                 </tr>
               </table>
             </td>

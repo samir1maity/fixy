@@ -69,9 +69,12 @@ const ProjectNavItem = ({
 }) => {
   const navigate = useNavigate();
   const isActive = !!activeId;
+  const isLoading = !websitesLoaded;
   const isLocked = websitesLoaded && !firstWebsiteId && !activeId;
+  const isDisabled = isLoading || isLocked;
 
   const handleClick = () => {
+    if (isDisabled) return;
     if (overrideTo) { navigate(overrideTo); return; }
     const target = activeId ?? firstWebsiteId;
     if (target) navigate(`/${section}/${target}`);
@@ -80,18 +83,18 @@ const ProjectNavItem = ({
   const btn = (
     <button
       onClick={handleClick}
-      disabled={isLocked}
+      disabled={isDisabled}
       className={cn(
         'w-full flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
         isActive
           ? 'bg-primary/10 text-primary'
           : 'text-muted-foreground hover:bg-accent hover:text-foreground',
-        isLocked && 'opacity-40 cursor-not-allowed hover:bg-transparent hover:text-muted-foreground'
+        isDisabled && 'opacity-40 cursor-not-allowed hover:bg-transparent hover:text-muted-foreground'
       )}
     >
       <span className="h-4 w-4 shrink-0">{icon}</span>
       {label}
-      {isLocked && <Lock className="ml-auto h-3 w-3 shrink-0" />}
+      {isDisabled && <Lock className="ml-auto h-3 w-3 shrink-0" />}
     </button>
   );
 
