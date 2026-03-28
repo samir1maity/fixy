@@ -28,6 +28,15 @@ export interface UpdateProfileRequest {
   newPassword?: string;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  password: string;
+}
+
 const BASE_PATH = '/users';
 
 export const userApiService = {
@@ -55,7 +64,15 @@ export const userApiService = {
 
   deleteUser: async (userId: string): Promise<void> => {
     return apiService.delete<void>(`${BASE_PATH}/${userId}`);
-  }
+  },
+
+  forgotPassword: async (data: ForgotPasswordRequest): Promise<{ message: string }> => {
+    return apiService.post<{ message: string }>(`${BASE_PATH}/forgot-password`, data);
+  },
+
+  resetPassword: async (data: ResetPasswordRequest): Promise<{ message: string }> => {
+    return apiService.post<{ message: string }>(`${BASE_PATH}/reset-password`, data);
+  },
 };
 
 export default userApiService;

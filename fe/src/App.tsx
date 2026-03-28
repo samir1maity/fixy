@@ -19,6 +19,8 @@ const ApiDocs = lazy(() => import("./pages/ApiDocs"));
 const AnalyticsPage = lazy(() => import("./pages/AnalyticsPage"));
 const ChatbotSettingsPage = lazy(() => import("./pages/ChatbotSettingsPage"));
 const ApiKeysPage = lazy(() => import("./pages/ApiKeysPage"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 
 function App() {
   return (
@@ -41,6 +43,22 @@ function App() {
               element={
                 <PublicRoute restricted>
                   <Signup />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/forgot-password"
+              element={
+                <PublicRoute restricted>
+                  <ForgotPassword />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/reset-password"
+              element={
+                <PublicRoute>
+                  <ResetPassword />
                 </PublicRoute>
               }
             />

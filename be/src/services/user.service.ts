@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import config from '../configs/config.js';
+import { resetPasswordEmail } from '../emails/resetPassword.template.js';
 import * as userValidation from '../zod/user.js'
 import * as userTypes from '../types/user.js'
 import { prisma } from '../configs/db.js'
@@ -91,16 +92,14 @@ export async function forgotPassword(data: z.infer<typeof userValidation.forgotP
   
   const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
   
+  const expiryMinutes = Math.round(config.auth.token_expiry / 60000);
+
   try {
     await transporter.sendMail({
-      from: process.env.EMAIL_FROM,
+      from: `"Fixy" <${process.env.EMAIL_FROM}>`,
       to: user.email,
-      subject: 'Password Reset Request',
-      html: `
-        <p>You requested a password reset.</p>
-        <p>Click <a href="${resetUrl}">here</a> to reset your password.</p>
-        <p>This link is valid for 1 hour.</p>
-      `,
+      subject: 'Reset your Fixy password',
+      html: resetPasswordEmail({ name: user.name, email: user.email, resetUrl, expiryMinutes }),
     });
   } catch (error) {
     console.error('Error sending email:', error);

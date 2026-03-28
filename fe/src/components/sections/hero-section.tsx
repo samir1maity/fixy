@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, Bot, MessageSquare } from 'lucide-react';
 import { fadeIn, scaleIn } from '@/lib/motion';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 const HeroSection = () => {
   const [isHovered, setIsHovered] = useState(false);
@@ -47,13 +48,15 @@ const HeroSection = () => {
               variants={fadeIn("up", "tween", 0.3, 0.3)}
               className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 justify-center lg:justify-start"
             >
-              <Button 
-                size="lg" 
-                className="bg-gradient-to-r from-fixy-accent to-primary hover:opacity-90 transition-opacity min-w-[180px] rounded-xl"
-              >
-                Get Started Free
-                <ArrowRight size={16} className="ml-2" />
-              </Button>
+              <Link to='/signup'>
+                <Button 
+                  size="lg" 
+                  className="bg-gradient-to-r from-fixy-accent to-primary hover:opacity-90 transition-opacity min-w-[180px] rounded-xl"
+                >
+                  Get Started Free
+                  <ArrowRight size={16} className="ml-2" />
+                </Button>
+              </Link>
               
               {/* <Button 
                 variant="outline" 

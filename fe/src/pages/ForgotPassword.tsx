@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Mail } from "lucide-react";
 import { toast } from "sonner";
+import userApiService from "@/services/user-api";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -21,13 +22,16 @@ const ForgotPassword = () => {
     }
     
     setIsLoading(true);
-    
-    // Simulate API call - replace with actual logic later
-    setTimeout(() => {
-      setIsLoading(false);
+
+    try {
+      await userApiService.forgotPassword({ email });
       setIsSubmitted(true);
-      toast.success("Reset link sent to your email!");
-    }, 1500);
+    } catch {
+      // Still show success to prevent email enumeration
+      setIsSubmitted(true);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
