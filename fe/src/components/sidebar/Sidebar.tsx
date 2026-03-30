@@ -6,11 +6,9 @@ import {
   Settings2,
   CircleUser,
   KeyRound,
-  Lock,
   LogOut,
   X,
 } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/auth-context';
@@ -56,7 +54,6 @@ const ProjectNavItem = ({
   icon,
   label,
   firstWebsiteId,
-  websitesLoaded,
   overrideTo,
 }: {
   section: 'analytics' | 'settings';
@@ -64,54 +61,31 @@ const ProjectNavItem = ({
   icon: React.ReactNode;
   label: string;
   firstWebsiteId: string | null;
-  websitesLoaded: boolean;
   overrideTo?: string;
 }) => {
   const navigate = useNavigate();
   const isActive = !!activeId;
-  const isLoading = !websitesLoaded;
-  const isLocked = websitesLoaded && !firstWebsiteId && !activeId;
-  const isDisabled = isLoading || isLocked;
 
   const handleClick = () => {
-    if (isDisabled) return;
     if (overrideTo) { navigate(overrideTo); return; }
     const target = activeId ?? firstWebsiteId;
     if (target) navigate(`/${section}/${target}`);
   };
 
-  const btn = (
+  return (
     <button
       onClick={handleClick}
-      disabled={isDisabled}
       className={cn(
         'w-full flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
         isActive
           ? 'bg-primary/10 text-primary'
           : 'text-muted-foreground hover:bg-accent hover:text-foreground',
-        isDisabled && 'opacity-40 cursor-not-allowed hover:bg-transparent hover:text-muted-foreground'
       )}
     >
       <span className="h-4 w-4 shrink-0">{icon}</span>
       {label}
-      {isDisabled && <Lock className="ml-auto h-3 w-3 shrink-0" />}
     </button>
   );
-
-  if (isLocked) {
-    return (
-      <TooltipProvider delayDuration={200}>
-        <Tooltip>
-          <TooltipTrigger asChild>{btn}</TooltipTrigger>
-          <TooltipContent side="right">
-            <p>Add a project first to access {label}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    );
-  }
-
-  return btn;
 };
 
 // ── Sidebar body ───────────────────────────────────────────────────────────
@@ -124,7 +98,6 @@ const SidebarBody = ({
 }) => {
   const { logout, user } = useAuth();
   const [firstWebsiteId, setFirstWebsiteId] = useState<string | null>(null);
-  const [websitesLoaded, setWebsitesLoaded] = useState(false);
 
   // Fetch website list once to know where to navigate when no project is active
   useEffect(() => {
@@ -133,8 +106,7 @@ const SidebarBody = ({
       .then((data) => {
         if (data?.length) setFirstWebsiteId(String(data[0].id));
       })
-      .catch(() => {})
-      .finally(() => setWebsitesLoaded(true));
+      .catch(() => {});
   }, []);
 
   return (
@@ -164,7 +136,6 @@ const SidebarBody = ({
           icon={<BarChart2 className="h-4 w-4" />}
           label="Analytics"
           firstWebsiteId={firstWebsiteId}
-          websitesLoaded={websitesLoaded}
         />
         <ProjectNavItem
           section="settings"
@@ -172,7 +143,6 @@ const SidebarBody = ({
           icon={<Settings2 className="h-4 w-4" />}
           label="Settings"
           firstWebsiteId={firstWebsiteId}
-          websitesLoaded={websitesLoaded}
         />
         <ProjectNavItem
           section="settings"
@@ -180,7 +150,6 @@ const SidebarBody = ({
           icon={<KeyRound className="h-4 w-4" />}
           label="API Keys"
           firstWebsiteId={firstWebsiteId}
-          websitesLoaded={websitesLoaded}
           overrideTo="/api-keys"
         />
         <NavItem
