@@ -7,56 +7,41 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useApi } from '@/hooks/use-api';
 import ReactMarkdown from 'react-markdown';
-// import apiService from '@/services/api';
 import chatApiService from '@/services/chat-api';
 import { useChatHistory } from '@/hooks/use-chat-history';
-import websiteApiService from '@/services/website-api';
+import { useWebsites } from '@/contexts/websites-context';
 import AppShell from '@/components/layout/AppShell';
 
 const ChatPage = () => {
   const { id } = useParams<{ id: string }>();
   const [input, setInput] = useState('');
-  const [websiteInfo, setWebsiteInfo] = useState<{ name?: string; domain: string; api_secret?: string } | null>(null);
-  const [apiSecret, setApiSecret] = useState<string | null>(null);
+  const [siteName, setSiteName] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  
+
+  // Secret comes from the already-authenticated context — always fresh, never stale
+  const { websites, getWebsiteSecret } = useWebsites();
+  const apiSecret = id ? getWebsiteSecret(Number(id)) : null;
+
   const { messages, sessionId, addMessage, clearChat, updateSessionId } = useChatHistory(id || 'default');
-  
+
   const { loading, execute } = useApi({
     showErrorToast: true,
     errorMessage: "Failed to send message",
   });
 
+  // Resolve display name from context (no extra API call needed)
   useEffect(() => {
-    const fetchWebsiteInfo = async () => {
-      try {
-        const savedSecret = localStorage.getItem(`api_secret_${id}`);
-        
-        const response = await websiteApiService.getWebsiteInfo(Number(id));
-        setWebsiteInfo(response);
-        
-        if (savedSecret) {
-          setApiSecret(savedSecret);
-        } else if (response && response.api_secret) {
-          setApiSecret(response.api_secret);
-          localStorage.setItem(`api_secret_${id}`, response.api_secret);
-        }
-        
-        if (messages.length === 0) {
-          addMessage('assistant', `👋 Hi there! I'm your AI assistant for ${response.name || response.domain || 'your website'}. How can I help you today?`);
-        }
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to load website information",
-          variant: "destructive"
-        });
+    if (!id) return;
+    const website = websites.find((w) => w.id === Number(id));
+    if (website) {
+      const name = website.name || website.domain;
+      setSiteName(name);
+      if (messages.length === 0) {
+        addMessage('assistant', `👋 Hi there! I'm your AI assistant for ${name}. How can I help you today?`);
       }
-    };
-    
-    fetchWebsiteInfo();
-  }, [id]);
+    }
+  }, [id, websites]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -106,8 +91,7 @@ const ChatPage = () => {
     });
     
     setTimeout(() => {
-      const siteName = websiteInfo?.name || websiteInfo?.domain || 'your website';
-      addMessage('assistant', `👋 Hi there! I'm your AI assistant for ${siteName}. How can I help you today?`);
+      addMessage('assistant', `👋 Hi there! I'm your AI assistant for ${siteName || 'your website'}. How can I help you today?`);
     }, 100);
   };
 
@@ -118,9 +102,9 @@ const ChatPage = () => {
           <div className="flex items-center mb-2 w-full justify-between gap-3">
             <div className="flex items-center min-w-0">
               <h1 className="text-2xl font-bold">Test Chatbot</h1>
-              {websiteInfo && (
+              {siteName && (
                 <span className="ml-3 text-sm text-muted-foreground truncate">
-                  {websiteInfo.name || websiteInfo.domain}
+                  {siteName}
                 </span>
               )}
             </div>
