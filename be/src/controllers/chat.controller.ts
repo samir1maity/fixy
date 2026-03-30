@@ -12,12 +12,14 @@ export const chat = async (req: Request, res: Response) => {
       return;
     }
 
+    const resolvedSessionId = sessionId || generateSessionId();
+
     let chatHistory: Array<{ role: string; content: string }> = [];
     if (sessionId) {
       chatHistory = await getChatHistory(sessionId);
     }
 
-    const response = await generateChatResponse(query, websiteId, chatHistory);
+    const response = await generateChatResponse(query, websiteId, chatHistory, resolvedSessionId);
 
     res.json({
       answer: response.answer,
@@ -25,7 +27,7 @@ export const chat = async (req: Request, res: Response) => {
       followupQuestions: response.followupQuestions,
       intentDetected: response.intentDetected,
       intentType: response.intentType,
-      sessionId: sessionId || generateSessionId(),
+      sessionId: resolvedSessionId,
     });
   } catch (error) {
     console.error("Chat error:", error);

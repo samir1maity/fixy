@@ -19,7 +19,8 @@ export function detectLeadIntent(query: string): { detected: boolean; intentType
 export async function generateChatResponse(
   query: string,
   websiteId: number,
-  chatHistory: Array<{ role: string; content: string }> = []
+  chatHistory: Array<{ role: string; content: string }> = [],
+  sessionId?: string
 ): Promise<{
   answer: string;
   sources: Array<{ url: string; title: string; relevance: number }>;
@@ -180,7 +181,8 @@ export async function generateChatResponse(
       query, 
       response, 
       uniqueSources,
-      finalChunks.map(c => c.id)
+      finalChunks.map(c => c.id),
+      sessionId
     );
     
     return {

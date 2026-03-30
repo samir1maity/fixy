@@ -4,11 +4,13 @@ import {
   BarChart, Bar, AreaChart, Area,
   XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts';
-import { MessageSquare, TrendingUp, CalendarDays, Clock, ChevronRight } from 'lucide-react';
+import { MessageSquare, TrendingUp, CalendarDays, Clock, ChevronRight, Globe } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppShell from '@/components/layout/AppShell';
 import PageProjectSwitcher from '@/components/common/PageProjectSwitcher';
 import analyticsApiService, { WebsiteAnalytics, ChatMessage } from '@/services/analytics-api';
+import { TIMEZONES } from '@/constants/timezones.constants';
 
 // ── Stat card ─────────────────────────────────────────────────────────────────
 
@@ -116,16 +118,19 @@ const AnalyticsPage = () => {
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState<7 | 14 | 30>(7);
   const [activeSession, setActiveSession] = useState<string | null>(null);
+  const [timezone, setTimezone] = useState<string>(
+    Intl.DateTimeFormat().resolvedOptions().timeZone
+  );
 
   useEffect(() => {
     if (!id) return;
     setLoading(true);
     analyticsApiService
-      .getWebsiteAnalytics(Number(id))
+      .getWebsiteAnalytics(Number(id), timezone)
       .then(setData)
       .catch(() => setData(null))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, timezone]);
 
   // Slice daily stats based on selected range
   const dailySlice = data?.dailyStats.slice(-range) ?? [];
@@ -140,7 +145,21 @@ const AnalyticsPage = () => {
             <p className="text-sm text-muted-foreground mt-0.5">{data.name || data.domain}</p>
           )}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Timezone picker */}
+          <Select value={timezone} onValueChange={setTimezone}>
+            <SelectTrigger className="h-8 text-xs w-44 gap-1.5">
+              <Globe className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {TIMEZONES.map((tz) => (
+                <SelectItem key={tz.value} value={tz.value} className="text-xs">
+                  {tz.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {/* Range toggle */}
           <div className="flex gap-1 bg-muted rounded-lg p-1 text-xs font-medium">
             {([7, 14, 30] as const).map((r) => (

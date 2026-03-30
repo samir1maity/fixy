@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
 import * as analyticsService from "../services/analytics.service.js";
 import { assertWebsiteOwner } from "../services/website.service.js";
+import { resolveTimezone } from "../helpers/analytics.helper.js";
 
 export const getUserChatStats = async (req: Request, res: Response) => {
   try {
-    const data = await analyticsService.getUserChatStats(req.user!.userId);
+    const tz = resolveTimezone(req.headers["x-timezone"] as string);
+    const data = await analyticsService.getUserChatStats(req.user!.userId, tz);
     res.json(data);
   } catch (error) {
     console.error("getUserChatStats error:", error);
@@ -16,7 +18,8 @@ export const getWebsiteAnalytics = async (req: Request, res: Response) => {
   try {
     const websiteId = Number(req.params.websiteId);
     await assertWebsiteOwner(websiteId, req.user!.userId);
-    const data = await analyticsService.getWebsiteAnalytics(websiteId);
+    const tz = resolveTimezone(req.headers["x-timezone"] as string);
+    const data = await analyticsService.getWebsiteAnalytics(websiteId, tz);
     res.json(data);
   } catch (error) {
     const status = (error as any)?.status;

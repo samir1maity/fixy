@@ -35,13 +35,13 @@ const dashboardCorsOptions: CorsOptions = {
 
     callback(new Error("Not allowed by CORS"));
   },
-  allowedHeaders: ["Content-Type", "Authorization", "x-api-secret"],
+  allowedHeaders: ["Content-Type", "Authorization", "x-api-secret", "x-timezone"],
   credentials: true,
 };
 
 const chatCorsOptions: CorsOptions = {
   origin: true,
-  allowedHeaders: ["Content-Type", "Authorization", "x-api-secret"],
+  allowedHeaders: ["Content-Type", "Authorization", "x-api-secret", "x-timezone"],
   credentials: false,
 };
 

@@ -44,12 +44,15 @@ export interface WebsiteAnalytics {
   recentSessions: ChatSession[];
 }
 
-const analyticsApiService = {
-  getUserChatStats: (): Promise<UserChatStats> =>
-    apiService.get("/analytics/user-chat-stats"),
+const browserTz = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
+const tzHeader = (tz?: string) => ({ "x-timezone": tz ?? browserTz() });
 
-  getWebsiteAnalytics: (websiteId: number): Promise<WebsiteAnalytics> =>
-    apiService.get(`/analytics/website/${websiteId}`),
+const analyticsApiService = {
+  getUserChatStats: (tz?: string): Promise<UserChatStats> =>
+    apiService.get("/analytics/user-chat-stats", { headers: tzHeader(tz) }),
+
+  getWebsiteAnalytics: (websiteId: number, tz?: string): Promise<WebsiteAnalytics> =>
+    apiService.get(`/analytics/website/${websiteId}`, { headers: tzHeader(tz) }),
 
   getSessionMessages: (sessionId: string): Promise<ChatMessage[]> =>
     apiService.get(`/analytics/session/${sessionId}/messages`),

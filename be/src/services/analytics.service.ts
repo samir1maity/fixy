@@ -1,8 +1,8 @@
 import { prisma } from "../configs/db.js";
 import { getWebsitesService } from "./website.service.js";
 import {
-  startOfTodayUTC,
-  daysAgoUTC,
+  startOfTodayInTz,
+  daysAgoInTz,
   aggregateDailyStats,
   aggregateHourlyStats,
   aggregateSessions,
@@ -14,7 +14,7 @@ interface WebsiteRow {
   [key: string]: unknown;
 }
 
-export async function getUserChatStats(userId: string) {
+export async function getUserChatStats(userId: string, tz: string) {
   const websites = (await getWebsitesService(userId)) as WebsiteRow[];
   const websiteIds = websites.map((w) => w.id);
 
@@ -22,7 +22,7 @@ export async function getUserChatStats(userId: string) {
     return { totalChats: 0, todayChats: 0, activeWebsites: 0, totalWebsites: 0 };
   }
 
-  const today = startOfTodayUTC();
+  const today = startOfTodayInTz(tz);
 
   const [totalChats, todayChats] = await Promise.all([
     prisma.chatInteraction.count({ where: { websiteId: { in: websiteIds } } }),
@@ -39,10 +39,10 @@ export async function getUserChatStats(userId: string) {
   };
 }
 
-export async function getWebsiteAnalytics(websiteId: number) {
-  const today = startOfTodayUTC();
-  const thirtyDaysAgo = daysAgoUTC(30);
-  const sevenDaysAgo = daysAgoUTC(7);
+export async function getWebsiteAnalytics(websiteId: number, tz: string) {
+  const today = startOfTodayInTz(tz);
+  const thirtyDaysAgo = daysAgoInTz(30, tz);
+  const sevenDaysAgo = daysAgoInTz(7, tz);
 
   const [
     website,
@@ -84,12 +84,13 @@ export async function getWebsiteAnalytics(websiteId: number) {
     websiteId,
     domain: website?.domain ?? "",
     name: website?.name ?? website?.domain ?? "",
+    timezone: tz,
     totalChats,
     todayChats,
     weekChats,
     monthChats,
-    dailyStats: aggregateDailyStats(rawDaily, 30),
-    hourlyStats: aggregateHourlyStats(rawHourly),
+    dailyStats: aggregateDailyStats(rawDaily, 30, tz),
+    hourlyStats: aggregateHourlyStats(rawHourly, tz),
     recentSessions: aggregateSessions(rawSessions, 10),
   };
 }
