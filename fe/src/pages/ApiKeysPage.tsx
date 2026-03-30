@@ -204,8 +204,7 @@ const KeyRow = ({ website, index, onRegenerated }: KeyRowProps) => {
             <Globe className="h-3.5 w-3.5 text-primary" />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-medium truncate leading-tight">{website.name}</p>
-            <p className="text-[11px] text-muted-foreground truncate leading-tight">{website.domain}</p>
+            <p className="text-sm font-medium truncate leading-tight text-left">{website.name}</p>
           </div>
         </div>
       </td>
@@ -313,8 +312,8 @@ const ApiKeysPage = () => {
               <KeyRound className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h1 className="text-xl font-bold">API Keys</h1>
-              <p className="text-sm text-muted-foreground">
+              <h1 className="text-xl font-bold text-left">API Keys</h1>
+              <p className="text-sm text-muted-foreground text-left">
                 Manage secret keys for all your knowledge bases
               </p>
             </div>
@@ -335,7 +334,7 @@ const ApiKeysPage = () => {
           <ShieldCheck className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
           <div className="space-y-1">
             {/* <p className="text-sm font-medium text-amber-800 dark:text-amber-300">Keep your secrets safe</p> */}
-            <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
+            <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed text-left">
               API secrets grant access to your chatbot. Never expose them in client-side code or public
               repositories. Regenerating a secret immediately invalidates the old one.
             </p>

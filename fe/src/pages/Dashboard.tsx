@@ -15,6 +15,7 @@ import WebsiteCard from '@/components/dashboard/website-card';
 import DashboardStats from '@/components/dashboard/dashboard-stats';
 import AddWebsiteModal, { AddWebsiteFormData } from '@/components/dashboard/add-website-modal';
 import AppShell from '@/components/layout/AppShell';
+import DashboardSkeleton from '@/components/skeletons/DashboardSkeleton';
 import { useApi } from '@/hooks/use-api';
 import websiteApiService, { Website } from '@/services/website-api';
 import analyticsApiService, { UserChatStats } from '@/services/analytics-api';
@@ -182,11 +183,19 @@ const Dashboard = () => {
     handleFetchStats();
   };
 
+  if (websitesLoading && !initialLoadComplete) {
+    return (
+      <AppShell>
+        <DashboardSkeleton />
+      </AppShell>
+    );
+  }
+
   return (
     <AppShell>
       {/* Dashboard Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-5">
-        <motion.div 
+        <motion.div
           variants={fadeUp()}
           initial="hidden"
           animate="show"
@@ -194,28 +203,6 @@ const Dashboard = () => {
           <h1 className="text-2xl font-bold mb-1 text-left">Your Chatbots</h1>
           <p className="text-sm text-muted-foreground text-left">Manage and monitor your website chatbots</p>
         </motion.div>
-        {/* <div className="flex items-center mt-3 md:mt-0 space-x-2">
-          <ProfileDropdown 
-            user={user} 
-            onLogout={logout}
-          />
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Button onClick={handleRefresh} variant="outline" size="sm" className="h-9 w-9 p-0">
-              <RefreshCw className="h-4 w-4" />
-            </Button>
-          </motion.div>
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Button onClick={handleAddWebsite} size="sm" className="h-9 px-3 text-sm bg-gradient-to-r from-fixy-accent to-primary hover:opacity-90">
-              <Plus className="mr-2 h-4 w-4" /> Add Website
-            </Button>
-          </motion.div>
-        </div> */}
       </div>
       
       {/* Dashboard Stats */}
@@ -231,7 +218,7 @@ const Dashboard = () => {
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
-      
+
       {/* Websites List */}
       <motion.div
         variants={staggerContainer(0.1)}
@@ -239,13 +226,6 @@ const Dashboard = () => {
         animate="show"
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
       >
-        {/* Show loading state only on initial load, not during polling */}
-        {websitesLoading && !initialLoadComplete && (
-          <div className="col-span-full text-center py-4">
-            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading websites...</p>
-          </div>
-        )}
         
         {/* Always show websites once initial load is complete */}
         {initialLoadComplete && filteredWebsites.map((website) => (
