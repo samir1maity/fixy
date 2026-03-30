@@ -191,8 +191,8 @@ const Dashboard = () => {
           initial="hidden"
           animate="show"
         >
-          <h1 className="text-2xl font-bold mb-1">Your Chatbots</h1>
-          <p className="text-sm text-muted-foreground">Manage and monitor your website chatbots</p>
+          <h1 className="text-2xl font-bold mb-1 text-left">Your Chatbots</h1>
+          <p className="text-sm text-muted-foreground text-left">Manage and monitor your website chatbots</p>
         </motion.div>
         {/* <div className="flex items-center mt-3 md:mt-0 space-x-2">
           <ProfileDropdown 

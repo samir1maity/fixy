@@ -164,7 +164,7 @@ const ChatbotSettingsPage = () => {
               <div className="space-y-5">
                 {/* Bot Name */}
                 <Card>
-                  <CardHeader className="pb-3">
+                  <CardHeader className="pb-3 text-left">
                     <CardTitle className="text-base flex items-center gap-2">
                       <Bot className="h-4 w-4 text-primary" />
                       Bot Name
@@ -183,7 +183,7 @@ const ChatbotSettingsPage = () => {
 
                 {/* Primary Color */}
                 <Card>
-                  <CardHeader className="pb-3">
+                  <CardHeader className="pb-3 text-left">
                     <CardTitle className="text-base flex items-center gap-2">
                       <Palette className="h-4 w-4 text-primary" />
                       Primary Color
@@ -230,7 +230,7 @@ const ChatbotSettingsPage = () => {
 
                 {/* Avatar URL */}
                 <Card>
-                  <CardHeader className="pb-3">
+                  <CardHeader className="pb-3 text-left">
                     <CardTitle className="text-base flex items-center gap-2">
                       <Bot className="h-4 w-4 text-primary" />
                       Avatar URL
@@ -258,7 +258,7 @@ const ChatbotSettingsPage = () => {
 
                 {/* Welcome Message */}
                 <Card>
-                  <CardHeader className="pb-3">
+                  <CardHeader className="pb-3 text-left">
                     <CardTitle className="text-base flex items-center gap-2">
                       <AlignLeft className="h-4 w-4 text-primary" />
                       Welcome Message
@@ -278,7 +278,7 @@ const ChatbotSettingsPage = () => {
 
                 {/* Position */}
                 <Card>
-                  <CardHeader className="pb-3">
+                  <CardHeader className="pb-3 text-left">
                     <CardTitle className="text-base flex items-center gap-2">
                       <Layout className="h-4 w-4 text-primary" />
                       Widget Position

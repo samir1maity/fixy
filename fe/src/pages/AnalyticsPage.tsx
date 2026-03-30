@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import AppShell from '@/components/layout/AppShell';
 import PageProjectSwitcher from '@/components/common/PageProjectSwitcher';
 import analyticsApiService, { WebsiteAnalytics, ChatMessage } from '@/services/analytics-api';
-import { TIMEZONES } from '@/constants/timezones.constants';
+import { TIMEZONES, resolveBrowserTimezone } from '@/constants/timezones.constants';
 
 // ── Stat card ─────────────────────────────────────────────────────────────────
 
@@ -118,9 +118,7 @@ const AnalyticsPage = () => {
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState<7 | 14 | 30>(7);
   const [activeSession, setActiveSession] = useState<string | null>(null);
-  const [timezone, setTimezone] = useState<string>(
-    Intl.DateTimeFormat().resolvedOptions().timeZone
-  );
+  const [timezone, setTimezone] = useState<string>(resolveBrowserTimezone);
 
   useEffect(() => {
     if (!id) return;
@@ -140,9 +138,9 @@ const AnalyticsPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
         <div>
-          <h1 className="text-xl font-bold">Analytics</h1>
+          <h1 className="text-xl font-bold text-left">Analytics</h1>
           {data && (
-            <p className="text-sm text-muted-foreground mt-0.5">{data.name || data.domain}</p>
+            <p className="text-sm text-muted-foreground mt-0.5 text-left">{data.name || data.domain}</p>
           )}
         </div>
         <div className="flex items-center gap-3 flex-wrap">
