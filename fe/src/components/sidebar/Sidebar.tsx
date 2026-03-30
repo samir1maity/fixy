@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { Link, useMatch, NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -13,7 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/auth-context';
 import { useSidebar } from './SidebarContext';
-import websiteApiService from '@/services/website-api';
+import { useWebsites } from '@/contexts/websites-context';
 import { cn } from '@/lib/utils';
 import { sidebar as tokens } from '@/styles/tokens';
 
@@ -92,22 +91,13 @@ const ProjectNavItem = ({
 const SidebarBody = ({
   analyticsId,
   settingsId,
+  firstWebsiteId,
 }: {
   analyticsId: string | null;
   settingsId: string | null;
+  firstWebsiteId: string | null;
 }) => {
   const { logout, user } = useAuth();
-  const [firstWebsiteId, setFirstWebsiteId] = useState<string | null>(null);
-
-  // Fetch website list once to know where to navigate when no project is active
-  useEffect(() => {
-    websiteApiService
-      .getWebsites()
-      .then((data) => {
-        if (data?.length) setFirstWebsiteId(String(data[0].id));
-      })
-      .catch(() => {});
-  }, []);
 
   return (
     <div className="flex h-full flex-col">
@@ -184,20 +174,20 @@ const SidebarBody = ({
 
 // ── Desktop sidebar ────────────────────────────────────────────────────────
 const DesktopSidebar = ({
-  analyticsId, settingsId,
-}: { analyticsId: string | null; settingsId: string | null }) => (
+  analyticsId, settingsId, firstWebsiteId,
+}: { analyticsId: string | null; settingsId: string | null; firstWebsiteId: string | null }) => (
   <aside
     style={{ width: tokens.widthExpanded }}
     className="fixed left-0 top-0 hidden h-screen border-r border-border/60 bg-background lg:flex flex-col z-40"
   >
-    <SidebarBody analyticsId={analyticsId} settingsId={settingsId} />
+    <SidebarBody analyticsId={analyticsId} settingsId={settingsId} firstWebsiteId={firstWebsiteId} />
   </aside>
 );
 
 // ── Mobile drawer ──────────────────────────────────────────────────────────
 const MobileDrawer = ({
-  analyticsId, settingsId,
-}: { analyticsId: string | null; settingsId: string | null }) => {
+  analyticsId, settingsId, firstWebsiteId,
+}: { analyticsId: string | null; settingsId: string | null; firstWebsiteId: string | null }) => {
   const { mobileOpen, setMobileOpen } = useSidebar();
 
   return (
@@ -227,7 +217,7 @@ const MobileDrawer = ({
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            <SidebarBody analyticsId={analyticsId} settingsId={settingsId} />
+            <SidebarBody analyticsId={analyticsId} settingsId={settingsId} firstWebsiteId={firstWebsiteId} />
           </motion.aside>
         </>
       )}
@@ -244,10 +234,12 @@ const Sidebar = () => {
   const analyticsId = analyticsMatch?.params.id ?? chatMatch?.params.id ?? null;
   const settingsId  = settingsMatch?.params.id ?? null;
 
+  const { firstWebsiteId } = useWebsites();
+
   return (
     <>
-      <DesktopSidebar analyticsId={analyticsId} settingsId={settingsId} />
-      <MobileDrawer   analyticsId={analyticsId} settingsId={settingsId} />
+      <DesktopSidebar analyticsId={analyticsId} settingsId={settingsId} firstWebsiteId={firstWebsiteId} />
+      <MobileDrawer   analyticsId={analyticsId} settingsId={settingsId} firstWebsiteId={firstWebsiteId} />
     </>
   );
 };

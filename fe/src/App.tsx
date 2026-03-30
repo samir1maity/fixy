@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/auth-context";
+import { WebsitesProvider } from "./contexts/websites-context";
 import { ThemeProvider } from "./contexts/theme-context";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
@@ -26,6 +27,7 @@ function App() {
   return (
     <ThemeProvider>
     <AuthProvider>
+    <WebsitesProvider>
       <Router>
         <Suspense fallback={<SuspenseFallback />}>
           <Routes>
@@ -142,6 +144,7 @@ function App() {
         </Suspense>
         <Toaster />
       </Router>
+    </WebsitesProvider>
     </AuthProvider>
     </ThemeProvider>
   );

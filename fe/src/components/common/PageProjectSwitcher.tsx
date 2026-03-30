@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronsUpDown, Globe } from 'lucide-react';
 import {
@@ -8,7 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import websiteApiService, { Website } from '@/services/website-api';
+import { useWebsites } from '@/contexts/websites-context';
 import { cn } from '@/lib/utils';
 
 interface PageProjectSwitcherProps {
@@ -20,14 +19,7 @@ interface PageProjectSwitcherProps {
 
 const PageProjectSwitcher = ({ currentId, section }: PageProjectSwitcherProps) => {
   const navigate = useNavigate();
-  const [websites, setWebsites] = useState<Website[]>([]);
-
-  useEffect(() => {
-    websiteApiService
-      .getWebsites()
-      .then((data) => setWebsites(data ?? []))
-      .catch(() => setWebsites([]));
-  }, []);
+  const { websites } = useWebsites();
 
   const current = websites.find((w) => String(w.id) === String(currentId));
 

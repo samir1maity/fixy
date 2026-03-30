@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronsUpDown, Globe } from 'lucide-react';
 import {
@@ -10,14 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import websiteApiService, { Website } from '@/services/website-api';
-
-// Dummy fallback while API is not ready
-const DUMMY_WEBSITES: Website[] = [
-  { id: 1, name: 'My Blog', domain: 'myblog.com', status: 'completed', chatbotActive: true, requestsToday: 12, requestsTotal: 340, lastChecked: '', api_secret: '' },
-  { id: 2, name: 'E-commerce Store', domain: 'mystore.com', status: 'completed', chatbotActive: true, requestsToday: 5, requestsTotal: 120, lastChecked: '', api_secret: '' },
-  { id: 3, name: 'Portfolio', domain: 'myportfolio.dev', status: 'pending', chatbotActive: false, requestsToday: 0, requestsTotal: 0, lastChecked: '', api_secret: '' },
-];
+import { useWebsites } from '@/contexts/websites-context';
 
 // Given the current path, figure out which section we're in so we
 // can keep the user in the same section when switching projects.
@@ -35,14 +27,7 @@ interface WebsiteSelectorProps {
 const WebsiteSelector = ({ currentWebsiteId }: WebsiteSelectorProps) => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const [websites, setWebsites] = useState<Website[]>([]);
-
-  useEffect(() => {
-    websiteApiService
-      .getWebsites()
-      .then((data) => setWebsites(data?.length ? data : DUMMY_WEBSITES))
-      .catch(() => setWebsites(DUMMY_WEBSITES));
-  }, []);
+  const { websites } = useWebsites();
 
   const current = websites.find((w) => String(w.id) === currentWebsiteId);
   const section = getSection(pathname);

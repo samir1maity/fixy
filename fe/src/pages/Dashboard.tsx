@@ -19,12 +19,14 @@ import { useApi } from '@/hooks/use-api';
 import websiteApiService, { Website } from '@/services/website-api';
 import analyticsApiService, { UserChatStats } from '@/services/analytics-api';
 import { useAuth } from '@/contexts/auth-context';
+import { useWebsites } from '@/contexts/websites-context';
 import { usePolling } from '@/hooks/use-polling';
 import { toast as sonnerToast } from "sonner";
 
 
 const Dashboard = () => {
   const { toast } = useToast();
+  const { setWebsites: setContextWebsites } = useWebsites();
   const [websites, setWebsites] = useState<Website[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -57,6 +59,7 @@ const Dashboard = () => {
       if (allWebsites) {
         // Update websites without losing the current display
         setWebsites(allWebsites);
+        setContextWebsites(allWebsites);
         
         // Check for any pending or embedding websites
         const pending = allWebsites.filter(
@@ -103,6 +106,7 @@ const Dashboard = () => {
     const data = await executeWebsiteFetch(() => websiteApiService.getWebsites());
     if (data) {
       setWebsites(data);
+      setContextWebsites(data);
       setInitialLoadComplete(true);
       
       // Check for any pending or embedding websites
