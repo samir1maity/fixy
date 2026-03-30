@@ -1,120 +1,329 @@
-import { motion } from 'framer-motion';
-import { BarChart2, TrendingUp, Activity, Clock, Zap, Construction } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import {
+  BarChart, Bar, AreaChart, Area,
+  XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
+} from 'recharts';
+import { MessageSquare, TrendingUp, CalendarDays, Clock, ChevronRight } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import AppShell from '@/components/layout/AppShell';
+import PageProjectSwitcher from '@/components/common/PageProjectSwitcher';
+import analyticsApiService, { WebsiteAnalytics, ChatMessage } from '@/services/analytics-api';
 
-// ── Dummy blurred background cards ──────────────────────────────────────────
+// ── Stat card ─────────────────────────────────────────────────────────────────
 
-const FakeStatCard = ({ label }: { label: string }) => (
-  <div className="bg-card border rounded-xl p-4 shadow-sm flex items-start gap-4 select-none">
-    <div className="p-2.5 rounded-lg shrink-0 bg-primary/10 w-10 h-10" />
-    <div className="space-y-1.5 flex-1">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <div className="h-7 w-20 bg-muted rounded" />
-      <div className="h-3 w-16 bg-muted/60 rounded" />
-    </div>
-  </div>
+const StatCard = ({
+  label,
+  value,
+  sub,
+  icon,
+}: {
+  label: string;
+  value: number | string;
+  sub?: string;
+  icon: React.ReactNode;
+}) => (
+  <Card>
+    <CardContent className="p-5 flex items-start gap-4">
+      <div className="p-2.5 rounded-lg bg-primary/10 shrink-0">{icon}</div>
+      <div className="min-w-0">
+        <p className="text-xs text-muted-foreground mb-0.5">{label}</p>
+        <p className="text-2xl font-bold leading-none">{value}</p>
+        {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
+      </div>
+    </CardContent>
+  </Card>
 );
 
-const FakeChartBlock = ({ height = 'h-52', className = '' }: { height?: string; className?: string }) => (
-  <div className={`bg-card border rounded-xl p-4 shadow-sm ${height} ${className}`}>
-    <div className="h-4 w-32 bg-muted rounded mb-1" />
-    <div className="h-3 w-24 bg-muted/60 rounded mb-4" />
-    <div className="flex items-end gap-1 h-28">
-      {[40, 65, 50, 80, 55, 90, 70, 60, 85, 45, 75, 95, 55, 65].map((h, i) => (
-        <div
-          key={i}
-          className="flex-1 bg-primary/20 rounded-t"
-          style={{ height: `${h}%` }}
-        />
-      ))}
+// ── Session message drawer ────────────────────────────────────────────────────
+
+const SessionDrawer = ({
+  sessionId,
+  onClose,
+}: {
+  sessionId: string;
+  onClose: () => void;
+}) => {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    analyticsApiService.getSessionMessages(sessionId)
+      .then(setMessages)
+      .catch(() => setMessages([]))
+      .finally(() => setLoading(false));
+  }, [sessionId]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-md bg-background border-l flex flex-col h-full shadow-xl">
+        <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
+          <p className="text-sm font-semibold">Session replay</p>
+          <button
+            onClick={onClose}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Close
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {loading && (
+            <p className="text-sm text-muted-foreground text-center pt-8">Loading…</p>
+          )}
+          {!loading && messages.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center pt-8">No messages found.</p>
+          )}
+          {messages.map((m) => (
+            <div
+              key={m.id}
+              className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              <div
+                className={`max-w-[80%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                  m.role === 'user'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-foreground'
+                }`}
+              >
+                {m.content}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
+
+// ── Chart tooltip ─────────────────────────────────────────────────────────────
+
+const ChartTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-popover border rounded-lg px-3 py-2 text-xs shadow-md">
+      <p className="text-muted-foreground mb-0.5">{label}</p>
+      <p className="font-semibold">{payload[0].value} chats</p>
+    </div>
+  );
+};
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 const AnalyticsPage = () => {
+  const { id } = useParams<{ id: string }>();
+  const [data, setData] = useState<WebsiteAnalytics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [range, setRange] = useState<7 | 14 | 30>(7);
+  const [activeSession, setActiveSession] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+    setLoading(true);
+    analyticsApiService
+      .getWebsiteAnalytics(Number(id))
+      .then(setData)
+      .catch(() => setData(null))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  // Slice daily stats based on selected range
+  const dailySlice = data?.dailyStats.slice(-range) ?? [];
+
   return (
     <AppShell>
-      <div className="relative">
-        {/* ── Blurred background (teaser) ── */}
-        <div className="blur-sm pointer-events-none select-none space-y-6" aria-hidden>
-          {/* Header */}
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <h1 className="text-xl font-bold flex items-center gap-2">
-              <BarChart2 className="h-5 w-5 text-primary" />
-              Analytics
-            </h1>
-            <div className="flex gap-1.5 bg-muted rounded-lg p-1">
-              <div className="px-3 py-1.5 rounded-md text-xs font-medium bg-background shadow-sm">Last 7 days</div>
-              <div className="px-3 py-1.5 rounded-md text-xs font-medium text-muted-foreground">Last 14 days</div>
-            </div>
-          </div>
-
-          {/* Stat cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <FakeStatCard label="Requests today" />
-            <FakeStatCard label="This week" />
-            <FakeStatCard label="Total requests" />
-            <FakeStatCard label="Avg response" />
-          </div>
-
-          {/* Charts row */}
-          <div className="grid lg:grid-cols-3 gap-4">
-            <FakeChartBlock height="h-64" className="lg:col-span-2" />
-            <FakeChartBlock height="h-64" />
-          </div>
-
-          {/* Hourly */}
-          <FakeChartBlock height="h-48" />
-
-          {/* Sessions list */}
-          <div className="space-y-2">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="border rounded-xl px-4 py-3 flex items-center gap-3">
-                <div className="p-1.5 bg-primary/10 rounded-lg w-7 h-7" />
-                <div className="flex-1 space-y-1.5">
-                  <div className="h-3.5 w-48 bg-muted rounded" />
-                  <div className="h-2.5 w-24 bg-muted/60 rounded" />
-                </div>
-              </div>
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
+        <div>
+          <h1 className="text-xl font-bold">Analytics</h1>
+          {data && (
+            <p className="text-sm text-muted-foreground mt-0.5">{data.name || data.domain}</p>
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          {/* Range toggle */}
+          <div className="flex gap-1 bg-muted rounded-lg p-1 text-xs font-medium">
+            {([7, 14, 30] as const).map((r) => (
+              <button
+                key={r}
+                onClick={() => setRange(r)}
+                className={`px-3 py-1.5 rounded-md transition-colors ${
+                  range === r
+                    ? 'bg-background shadow-sm text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {r}d
+              </button>
             ))}
           </div>
-        </div>
-
-        {/* ── Coming soon overlay ── */}
-        <div className="absolute inset-0 flex items-center justify-center z-10">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
-            className="bg-card border rounded-2xl shadow-xl p-8 flex flex-col items-center text-center max-w-sm mx-4"
-          >
-            <div className="w-14 h-14 rounded-full bg-amber-500/10 flex items-center justify-center mb-4">
-              <Construction className="h-7 w-7 text-amber-500" />
-            </div>
-
-            <h2 className="text-xl font-bold mb-2">Under Development</h2>
-            <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-              We're working hard on this. Analytics will be available very soon — stay tuned!
-            </p>
-
-            <div className="w-full space-y-2 text-sm text-left">
-              {[
-                { icon: <Zap className="h-4 w-4 text-amber-500" />, text: 'Daily & hourly request charts' },
-                { icon: <TrendingUp className="h-4 w-4 text-amber-500" />, text: 'Traffic trends over time' },
-                { icon: <Activity className="h-4 w-4 text-amber-500" />, text: 'All-time usage stats' },
-                { icon: <Clock className="h-4 w-4 text-amber-500" />, text: 'Chat session replay' },
-              ].map(({ icon, text }) => (
-                <div key={text} className="flex items-center gap-2.5 text-muted-foreground">
-                  {icon}
-                  <span>{text}</span>
-                </div>
-              ))}
-            </div>
-          </motion.div>
+          {id && <PageProjectSwitcher currentId={id} section="analytics" />}
         </div>
       </div>
+
+      {loading && (
+        <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
+          Loading analytics…
+        </div>
+      )}
+
+      {!loading && !data && (
+        <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
+          Failed to load analytics.
+        </div>
+      )}
+
+      {!loading && data && (
+        <div className="space-y-6">
+          {/* Stat cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard
+              label="Today"
+              value={data.todayChats}
+              sub="chats so far"
+              icon={<Clock className="h-4 w-4 text-primary" />}
+            />
+            <StatCard
+              label="This week"
+              value={data.weekChats}
+              sub="last 7 days"
+              icon={<CalendarDays className="h-4 w-4 text-primary" />}
+            />
+            <StatCard
+              label="This month"
+              value={data.monthChats}
+              sub="last 30 days"
+              icon={<TrendingUp className="h-4 w-4 text-primary" />}
+            />
+            <StatCard
+              label="All time"
+              value={data.totalChats}
+              sub="total chats"
+              icon={<MessageSquare className="h-4 w-4 text-primary" />}
+            />
+          </div>
+
+          {/* Daily chart */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold">Daily chats</CardTitle>
+              <CardDescription className="text-xs">Last {range} days</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={200}>
+                <AreaChart data={dailySlice} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.15} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(v) => v.slice(5)} // "MM-DD"
+                  />
+                  <YAxis
+                    tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                    tickLine={false}
+                    axisLine={false}
+                    allowDecimals={false}
+                  />
+                  <Tooltip content={<ChartTooltip />} />
+                  <Area
+                    type="monotone"
+                    dataKey="requests"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth={2}
+                    fill="url(#areaGrad)"
+                    dot={false}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Hourly chart */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold">Hourly chats (today)</CardTitle>
+              <CardDescription className="text-xs">Activity by hour</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={160}>
+                <BarChart data={data.hourlyStats} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis
+                    dataKey="hour"
+                    tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                    tickLine={false}
+                    axisLine={false}
+                    interval={3}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                    tickLine={false}
+                    axisLine={false}
+                    allowDecimals={false}
+                  />
+                  <Tooltip content={<ChartTooltip />} />
+                  <Bar
+                    dataKey="requests"
+                    fill="hsl(var(--primary))"
+                    radius={[3, 3, 0, 0]}
+                    maxBarSize={24}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Recent sessions */}
+          {data.recentSessions.length > 0 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold">Recent sessions</CardTitle>
+                <CardDescription className="text-xs">Click to replay conversation</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <ul className="divide-y">
+                  {data.recentSessions.map((s) => (
+                    <li key={s.sessionId}>
+                      <button
+                        onClick={() => setActiveSession(s.sessionId)}
+                        className="w-full flex items-center gap-3 px-5 py-3 hover:bg-accent transition-colors text-left"
+                      >
+                        <div className="p-1.5 rounded-lg bg-primary/10 shrink-0">
+                          <MessageSquare className="h-3.5 w-3.5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm truncate">{s.lastMessage}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {s.messageCount} message{s.messageCount !== 1 ? 's' : ''} ·{' '}
+                            {new Date(s.startedAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* Session replay drawer */}
+      {activeSession && (
+        <SessionDrawer
+          sessionId={activeSession}
+          onClose={() => setActiveSession(null)}
+        />
+      )}
     </AppShell>
   );
 };

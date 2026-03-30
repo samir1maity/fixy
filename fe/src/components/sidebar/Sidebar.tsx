@@ -22,11 +22,13 @@ const NavItem = ({
   icon,
   label,
   end,
+  forceActive,
 }: {
   to: string;
   icon: React.ReactNode;
   label: string;
   end?: boolean;
+  forceActive?: boolean;
 }) => (
   <NavLink
     to={to}
@@ -34,7 +36,7 @@ const NavItem = ({
     className={({ isActive }) =>
       cn(
         'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-        isActive
+        isActive || forceActive
           ? 'bg-primary/10 text-primary'
           : 'text-muted-foreground hover:bg-accent hover:text-foreground'
       )
@@ -91,13 +93,17 @@ const ProjectNavItem = ({
 const SidebarBody = ({
   analyticsId,
   settingsId,
+  chatId,
   firstWebsiteId,
 }: {
   analyticsId: string | null;
   settingsId: string | null;
+  chatId: string | null;
   firstWebsiteId: string | null;
 }) => {
   const { logout, user } = useAuth();
+  // For Analytics/Settings navigation fallback when on /chat/:id
+  const navFallbackId = analyticsId ?? chatId ?? firstWebsiteId;
 
   return (
     <div className="flex h-full flex-col">
@@ -119,20 +125,21 @@ const SidebarBody = ({
           icon={<LayoutDashboard className="h-4 w-4" />}
           label="Projects"
           end
+          forceActive={!!chatId}
         />
         <ProjectNavItem
           section="analytics"
           activeId={analyticsId}
           icon={<BarChart2 className="h-4 w-4" />}
           label="Analytics"
-          firstWebsiteId={firstWebsiteId}
+          firstWebsiteId={navFallbackId}
         />
         <ProjectNavItem
           section="settings"
           activeId={settingsId}
           icon={<Settings2 className="h-4 w-4" />}
           label="Settings"
-          firstWebsiteId={firstWebsiteId}
+          firstWebsiteId={navFallbackId}
         />
         <ProjectNavItem
           section="settings"
@@ -172,22 +179,25 @@ const SidebarBody = ({
   );
 };
 
+type SidebarProps = {
+  analyticsId: string | null;
+  settingsId: string | null;
+  chatId: string | null;
+  firstWebsiteId: string | null;
+};
+
 // ── Desktop sidebar ────────────────────────────────────────────────────────
-const DesktopSidebar = ({
-  analyticsId, settingsId, firstWebsiteId,
-}: { analyticsId: string | null; settingsId: string | null; firstWebsiteId: string | null }) => (
+const DesktopSidebar = ({ analyticsId, settingsId, chatId, firstWebsiteId }: SidebarProps) => (
   <aside
     style={{ width: tokens.widthExpanded }}
     className="fixed left-0 top-0 hidden h-screen border-r border-border/60 bg-background lg:flex flex-col z-40"
   >
-    <SidebarBody analyticsId={analyticsId} settingsId={settingsId} firstWebsiteId={firstWebsiteId} />
+    <SidebarBody analyticsId={analyticsId} settingsId={settingsId} chatId={chatId} firstWebsiteId={firstWebsiteId} />
   </aside>
 );
 
 // ── Mobile drawer ──────────────────────────────────────────────────────────
-const MobileDrawer = ({
-  analyticsId, settingsId, firstWebsiteId,
-}: { analyticsId: string | null; settingsId: string | null; firstWebsiteId: string | null }) => {
+const MobileDrawer = ({ analyticsId, settingsId, chatId, firstWebsiteId }: SidebarProps) => {
   const { mobileOpen, setMobileOpen } = useSidebar();
 
   return (
@@ -217,7 +227,7 @@ const MobileDrawer = ({
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            <SidebarBody analyticsId={analyticsId} settingsId={settingsId} firstWebsiteId={firstWebsiteId} />
+            <SidebarBody analyticsId={analyticsId} settingsId={settingsId} chatId={chatId} firstWebsiteId={firstWebsiteId} />
           </motion.aside>
         </>
       )}
@@ -231,15 +241,16 @@ const Sidebar = () => {
   const settingsMatch  = useMatch('/settings/:id');
   const chatMatch      = useMatch('/chat/:id');
 
-  const analyticsId = analyticsMatch?.params.id ?? chatMatch?.params.id ?? null;
+  const analyticsId = analyticsMatch?.params.id ?? null;
   const settingsId  = settingsMatch?.params.id ?? null;
+  const chatId      = chatMatch?.params.id ?? null;
 
   const { firstWebsiteId } = useWebsites();
 
   return (
     <>
-      <DesktopSidebar analyticsId={analyticsId} settingsId={settingsId} firstWebsiteId={firstWebsiteId} />
-      <MobileDrawer   analyticsId={analyticsId} settingsId={settingsId} firstWebsiteId={firstWebsiteId} />
+      <DesktopSidebar analyticsId={analyticsId} settingsId={settingsId} chatId={chatId} firstWebsiteId={firstWebsiteId} />
+      <MobileDrawer   analyticsId={analyticsId} settingsId={settingsId} chatId={chatId} firstWebsiteId={firstWebsiteId} />
     </>
   );
 };

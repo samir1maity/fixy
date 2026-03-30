@@ -1,87 +1,108 @@
 import { prisma } from "../configs/db.js";
 import { getWebsitesService } from "./website.service.js";
+import {
+  startOfTodayUTC,
+  daysAgoUTC,
+  aggregateDailyStats,
+  aggregateHourlyStats,
+  aggregateSessions,
+} from "../helpers/analytics.helper.js";
 
-export interface Website {
+interface WebsiteRow {
   id: number;
-  name: string;
-  domain: string;
-  status: 'pending' | 'embedding' | 'completed' | 'failed';
-  chatbotActive: boolean;
-  requestsToday: number;
-  requestsTotal: number;
-  lastChecked: string;
-  api_secret: string;
+  status: string;
+  [key: string]: unknown;
 }
 
 export async function getUserChatStats(userId: string) {
-  //@ts-ignore
-  const websites: Website[] = await getWebsitesService(userId);
-  const websiteIds = websites.map((website: Website) => website.id);
+  const websites = (await getWebsitesService(userId)) as WebsiteRow[];
+  const websiteIds = websites.map((w) => w.id);
 
   if (websiteIds.length === 0) {
-    return {
-      totalChats: 0,
-      todayChats: 0,
-      activeWebsites: 0,
-      totalWebsites: 0,
-    };
+    return { totalChats: 0, todayChats: 0, activeWebsites: 0, totalWebsites: 0 };
   }
 
-  const totalChats = await prisma.chatInteraction.count({
-    where: {
-      websiteId: {
-        in: websiteIds,
-      },
-    },
-  });
+  const today = startOfTodayUTC();
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const todayChats = await prisma.chatInteraction.count({
-    where: {
-      websiteId: {
-        in: websiteIds,
-      },
-      createdAt: {
-        gte: today,
-      },
-    },
-  });
-
-  const activeWebsites = websites.filter(
-    (website: Website) => website.status === "completed"
-  ).length;
+  const [totalChats, todayChats] = await Promise.all([
+    prisma.chatInteraction.count({ where: { websiteId: { in: websiteIds } } }),
+    prisma.chatInteraction.count({
+      where: { websiteId: { in: websiteIds }, createdAt: { gte: today } },
+    }),
+  ]);
 
   return {
     totalChats,
     todayChats,
-    activeWebsites,
+    activeWebsites: websites.filter((w) => w.status === "completed").length,
     totalWebsites: websites.length,
   };
 }
 
-export async function getWebsiteChatStats(websiteId: number) {
-  const totalChats = await prisma.chatInteraction.count({
-    where: {
-      websiteId,
-    },
-  });
+export async function getWebsiteAnalytics(websiteId: number) {
+  const today = startOfTodayUTC();
+  const thirtyDaysAgo = daysAgoUTC(30);
+  const sevenDaysAgo = daysAgoUTC(7);
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const todayChats = await prisma.chatInteraction.count({
-    where: {
-      websiteId,
-      createdAt: {
-        gte: today,
-      },
-    },
-  });
-
-  return {
+  const [
+    website,
     totalChats,
     todayChats,
+    weekChats,
+    monthChats,
+    rawDaily,
+    rawHourly,
+    rawSessions,
+  ] = await Promise.all([
+    prisma.website.findUnique({
+      where: { id: websiteId },
+      select: { id: true, domain: true, name: true },
+    }),
+    prisma.chatInteraction.count({ where: { websiteId } }),
+    prisma.chatInteraction.count({ where: { websiteId, createdAt: { gte: today } } }),
+    prisma.chatInteraction.count({ where: { websiteId, createdAt: { gte: sevenDaysAgo } } }),
+    prisma.chatInteraction.count({ where: { websiteId, createdAt: { gte: thirtyDaysAgo } } }),
+    prisma.chatInteraction.findMany({
+      where: { websiteId, createdAt: { gte: thirtyDaysAgo } },
+      select: { createdAt: true },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.chatInteraction.findMany({
+      where: { websiteId, createdAt: { gte: today } },
+      select: { createdAt: true },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.chatInteraction.findMany({
+      where: { websiteId, sessionId: { not: null } },
+      select: { sessionId: true, query: true, createdAt: true },
+      orderBy: { createdAt: "desc" },
+      take: 200,
+    }),
+  ]);
+
+  return {
+    websiteId,
+    domain: website?.domain ?? "",
+    name: website?.name ?? website?.domain ?? "",
+    totalChats,
+    todayChats,
+    weekChats,
+    monthChats,
+    dailyStats: aggregateDailyStats(rawDaily, 30),
+    hourlyStats: aggregateHourlyStats(rawHourly),
+    recentSessions: aggregateSessions(rawSessions, 10),
   };
+}
+
+export async function getSessionMessages(sessionId: string) {
+  const interactions = await prisma.chatInteraction.findMany({
+    where: { sessionId },
+    select: { id: true, query: true, response: true, createdAt: true },
+    orderBy: { createdAt: "asc" },
+  });
+
+  return interactions.flatMap((i) => [
+    { id: `${i.id}-u`, role: "user" as const, content: i.query, timestamp: i.createdAt },
+    { id: `${i.id}-a`, role: "assistant" as const, content: i.response, timestamp: i.createdAt },
+  ]);
 }

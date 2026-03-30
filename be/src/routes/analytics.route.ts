@@ -1,10 +1,17 @@
 import { Router } from "express";
-import { getUserChatStats, getWebsiteChatStats } from "../controllers/analytics.controller.js";
 import { authenticate } from "../middlewares/auth.middleware.js";
+import {
+  getUserChatStats,
+  getWebsiteAnalytics,
+  getSessionMessages,
+} from "../controllers/analytics.controller.js";
 
 const analyticsRouter = Router();
 
-analyticsRouter.get("/user-chat-stats", authenticate, getUserChatStats);
-analyticsRouter.get("/website-chat-stats/:websiteId", authenticate, getWebsiteChatStats);
+analyticsRouter.use(authenticate);
+
+analyticsRouter.get("/user-chat-stats", getUserChatStats);
+analyticsRouter.get("/website/:websiteId", getWebsiteAnalytics);
+analyticsRouter.get("/session/:sessionId/messages", getSessionMessages);
 
 export default analyticsRouter;
