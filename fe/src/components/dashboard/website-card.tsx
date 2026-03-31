@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Loader2, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Loader2, RefreshCw, MessageSquare, Globe, AlertTriangle, BarChart2, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import UpdateKnowledgeModal from './update-knowledge-modal';
 
 interface WebsiteCardProps {
@@ -23,109 +23,187 @@ interface WebsiteCardProps {
   onKnowledgeUpdated?: () => void;
 }
 
+const STATUS_CONFIG = {
+  completed: {
+    badge: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/20',
+    dot: 'bg-emerald-500',
+    ping: false,
+    label: 'Active',
+    topLine: 'via-emerald-500/50',
+  },
+  pending: {
+    badge: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 ring-1 ring-amber-500/20',
+    dot: 'bg-amber-500',
+    ping: true,
+    label: 'Processing',
+    topLine: 'via-amber-500/50',
+  },
+  embedding: {
+    badge: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 ring-1 ring-amber-500/20',
+    dot: 'bg-amber-500',
+    ping: true,
+    label: 'Embedding',
+    topLine: 'via-amber-500/50',
+  },
+  failed: {
+    badge: 'bg-red-500/10 text-red-600 dark:text-red-400 ring-1 ring-red-500/20',
+    dot: 'bg-red-500',
+    ping: false,
+    label: 'Failed',
+    topLine: 'via-red-500/50',
+  },
+} as const;
+
 const WebsiteCard = ({ website, isPending = false, onKnowledgeUpdated }: WebsiteCardProps) => {
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
-
-  const getStatusDisplay = () => {
-    if (isPending) {
-      return (
-        <span className="flex items-center">
-          Processing <Loader2 className="ml-1 h-3 w-3 animate-spin" />
-        </span>
-      );
-    }
-    return website.status === "completed"
-      ? "Active"
-      : website.status === "pending" || website.status === "embedding"
-        ? "Processing"
-        : "Issues";
-  };
-
+  const cfg = STATUS_CONFIG[website.status];
+  const isProcessing = isPending || website.status === 'pending' || website.status === 'embedding';
   const canUpdateKnowledge = website.status === 'completed' || website.status === 'failed';
 
   return (
-    <>
-      <motion.div
-        initial="hidden"
-        animate="visible"
-        className="bg-card border rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow"
-      >
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="text-lg font-semibold truncate max-w-[200px]" title={website.name}>{website.name}</h3>
-          </div>
+    <TooltipProvider delayDuration={150}>
+      <>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          whileHover={{ y: -3, transition: { duration: 0.15, ease: 'easeOut' } }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="group relative overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm hover:shadow-lg hover:shadow-black/8 dark:hover:shadow-black/25 transition-all duration-300"
+        >
+          {/* Status accent line */}
+          <div className={`absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent ${cfg.topLine} to-transparent`} />
 
-          <div className="flex justify-end">
-            <div className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center ${
-              website.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
-              website.status === 'pending' || website.status === 'embedding' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' :
-              'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-            }`}>
-              <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                website.status === 'completed' ? 'bg-green-500' :
-                website.status === 'pending' || website.status === 'embedding' ? 'bg-amber-500' :
-                'bg-red-500'
-              }`}></span>
-              {getStatusDisplay()}
+          {/* ── Body ── */}
+          <div className="relative flex flex-col p-5 gap-3">
+
+            {/* Header: globe + name + domain */}
+            <div className="flex items-center gap-3">
+              <div className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/8 text-primary ring-1 ring-primary/15">
+                <Globe className="h-[18px] w-[18px]" />
+              </div>
+              <div className="min-w-0 text-left">
+                <h3 className="truncate text-sm font-semibold text-card-foreground leading-snug" title={website.name}>
+                  {website.name}
+                </h3>
+                {/* <p className="truncate text-[11px] font-mono text-muted-foreground/55 mt-0.5" title={website.domain}>
+                  {website.domain}
+                </p> */}
+              </div>
             </div>
-          </div>
-        </div>
 
-        <div className="mt-4 space-y-2.5">
-          <div className="flex justify-between items-center">
-            <span className="text-xs sm:text-sm text-muted-foreground">Requests today</span>
-            <span className="text-sm font-medium">{website.requestsToday}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-xs sm:text-sm text-muted-foreground">Total requests</span>
-            <span className="text-sm font-medium">{website.requestsTotal}</span>
-          </div>
-        </div>
+            {/* Status pill */}
+            <div>
+              <div className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium ${cfg.badge}`}>
+                {cfg.ping ? (
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className={`absolute inline-flex h-full w-full animate-ping rounded-full ${cfg.dot} opacity-50`} />
+                    <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
+                  </span>
+                ) : (
+                  <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
+                )}
+                {isProcessing ? 'Processing' : cfg.label}
+                {isProcessing && <Loader2 className="h-2.5 w-2.5 animate-spin" />}
+              </div>
+            </div>
 
-        {website.status === 'failed' && website.statusMessage && (
-          <div className="mt-3 p-2.5 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-md text-xs sm:text-sm">
-            <p className="font-medium mb-1">Processing Failed</p>
-            <p>{website.statusMessage}</p>
-          </div>
-        )}
-
-        {(website.status === 'completed' || canUpdateKnowledge) && (
-          <div className={`mt-4 ${website.status === 'completed' ? 'grid grid-cols-2 gap-2' : ''}`}>
-            {website.status === 'completed' && (
-              <Link to={`/chat/${website.id}`}>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full border-primary text-primary hover:bg-primary hover:text-white"
-                >
-                  Test Chatbot
-                </Button>
-              </Link>
+            {/* Error banner */}
+            {website.status === 'failed' && website.statusMessage && (
+              <div className="flex gap-2.5 rounded-xl bg-red-500/8 p-3 ring-1 ring-red-500/15">
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-red-500 mt-0.5" />
+                <div>
+                  <p className="text-xs font-semibold text-red-500 mb-0.5">Processing Failed</p>
+                  <p className="text-xs text-red-500/60 leading-relaxed">{website.statusMessage}</p>
+                </div>
+              </div>
             )}
-            {canUpdateKnowledge && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full border-muted-foreground/30 text-muted-foreground hover:border-primary hover:text-primary"
-                onClick={() => setIsUpdateModalOpen(true)}
-              >
-                <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-                Update KB
-              </Button>
+
+            {/* Processing notice */}
+            {isProcessing && (
+              <div className="flex items-center gap-2.5 rounded-xl bg-amber-500/8 p-3 ring-1 ring-amber-500/15">
+                <Loader2 className="h-3.5 w-3.5 shrink-0 text-amber-500 animate-spin" />
+                <p className="text-xs text-amber-600/70 dark:text-amber-400/60">Scraping & embedding your knowledge base…</p>
+              </div>
             )}
           </div>
-        )}
-      </motion.div>
 
-      <UpdateKnowledgeModal
-        websiteId={website.id}
-        websiteName={website.name}
-        isOpen={isUpdateModalOpen}
-        onClose={() => setIsUpdateModalOpen(false)}
-        onSuccess={() => { onKnowledgeUpdated?.(); }}
-        pdfEnabled={website.pdfEnabled ?? false}
-      />
-    </>
+          {/* ── Bottom action bar ── */}
+          <div className="grid grid-cols-4 border-t border-border/40 divide-x divide-border/40">
+
+            {/* Test Chatbot */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                {website.status === 'completed' ? (
+                  <Link to={`/chat/${website.id}`} className="flex flex-col items-center justify-center gap-1 py-3 text-muted-foreground hover:bg-primary/8 hover:text-primary active:scale-95 transition-all duration-150">
+                    <MessageSquare className="h-4 w-4" />
+                    <span className="text-[10px] font-medium">Chat</span>
+                  </Link>
+                ) : (
+                  <div className="flex flex-col items-center justify-center gap-1 py-3 text-muted-foreground/30 cursor-not-allowed">
+                    <MessageSquare className="h-4 w-4" />
+                    <span className="text-[10px] font-medium">Chat</span>
+                  </div>
+                )}
+              </TooltipTrigger>
+              <TooltipContent side="top" sideOffset={6}>Test Chatbot</TooltipContent>
+            </Tooltip>
+
+            {/* Update KB */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                {canUpdateKnowledge ? (
+                  <button
+                    onClick={() => setIsUpdateModalOpen(true)}
+                    className="flex flex-col items-center justify-center gap-1 py-3 text-muted-foreground hover:bg-primary/8 hover:text-primary active:scale-95 transition-all duration-150 w-full"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    <span className="text-[10px] font-medium">Update</span>
+                  </button>
+                ) : (
+                  <div className="flex flex-col items-center justify-center gap-1 py-3 text-muted-foreground/30 cursor-not-allowed">
+                    <RefreshCw className="h-4 w-4" />
+                    <span className="text-[10px] font-medium">Update</span>
+                  </div>
+                )}
+              </TooltipTrigger>
+              <TooltipContent side="top" sideOffset={6}>Update Knowledge Base</TooltipContent>
+            </Tooltip>
+
+            {/* Analytics */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link to={`/analytics/${website.id}`} className="flex flex-col items-center justify-center gap-1 py-3 text-muted-foreground hover:bg-primary/8 hover:text-primary active:scale-95 transition-all duration-150">
+                  <BarChart2 className="h-4 w-4" />
+                  <span className="text-[10px] font-medium">Analytics</span>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="top" sideOffset={6}>Analytics</TooltipContent>
+            </Tooltip>
+
+            {/* Settings */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link to={`/settings/${website.id}`} className="flex flex-col items-center justify-center gap-1 py-3 text-muted-foreground hover:bg-primary/8 hover:text-primary active:scale-95 transition-all duration-150">
+                  <Settings className="h-4 w-4" />
+                  <span className="text-[10px] font-medium">Settings</span>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="top" sideOffset={6}>Settings</TooltipContent>
+            </Tooltip>
+
+          </div>
+        </motion.div>
+
+        <UpdateKnowledgeModal
+          websiteId={website.id}
+          websiteName={website.name}
+          isOpen={isUpdateModalOpen}
+          onClose={() => setIsUpdateModalOpen(false)}
+          onSuccess={() => { onKnowledgeUpdated?.(); }}
+          pdfEnabled={website.pdfEnabled ?? false}
+        />
+      </>
+    </TooltipProvider>
   );
 };
 
