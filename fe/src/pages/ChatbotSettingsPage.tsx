@@ -13,6 +13,7 @@ import { toast as sonnerToast } from 'sonner';
 import websiteApiService from '@/services/website-api';
 import config from '@/config';
 import PageProjectSwitcher from '@/components/common/PageProjectSwitcher';
+import SettingsSkeleton from '@/components/skeletons/SettingsSkeleton';
 
 interface WidgetSettings {
   widgetBotName: string;
@@ -106,9 +107,7 @@ const ChatbotSettingsPage = () => {
   if (isLoading) {
     return (
       <AppShell>
-        <div className="flex items-center justify-center py-20">
-          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
-        </div>
+        <SettingsSkeleton />
       </AppShell>
     );
   }

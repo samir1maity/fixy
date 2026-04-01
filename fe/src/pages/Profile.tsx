@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import AppShell from '@/components/layout/AppShell';
 import userApiService from '@/services/user-api';
+import ProfileSkeleton from '@/components/skeletons/ProfileSkeleton';
 
 const Profile = () => {
   const { toast } = useToast();
@@ -74,9 +75,7 @@ const Profile = () => {
       </div>
 
       {loading ? (
-        <div className="flex justify-center items-center h-40">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
+        <ProfileSkeleton />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Left card */}
