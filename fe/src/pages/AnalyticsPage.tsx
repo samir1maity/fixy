@@ -11,6 +11,7 @@ import AppShell from '@/components/layout/AppShell';
 import PageProjectSwitcher from '@/components/common/PageProjectSwitcher';
 import analyticsApiService, { WebsiteAnalytics, ChatMessage } from '@/services/analytics-api';
 import { TIMEZONES, resolveBrowserTimezone } from '@/constants/timezones.constants';
+import AnalyticsSkeleton from '@/components/skeletons/AnalyticsSkeleton';
 
 // ── Stat card ─────────────────────────────────────────────────────────────────
 
@@ -178,11 +179,7 @@ const AnalyticsPage = () => {
         </div>
       </div>
 
-      {loading && (
-        <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
-          Loading analytics…
-        </div>
-      )}
+      {loading && <AnalyticsSkeleton />}
 
       {!loading && !data && (
         <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
