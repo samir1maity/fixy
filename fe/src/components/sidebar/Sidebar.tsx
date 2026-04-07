@@ -7,6 +7,7 @@ import {
   KeyRound,
   LogOut,
   X,
+  Users,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -57,7 +58,7 @@ const ProjectNavItem = ({
   firstWebsiteId,
   overrideTo,
 }: {
-  section: 'analytics' | 'settings';
+  section: 'analytics' | 'settings' | 'leads';
   activeId: string | null;
   icon: React.ReactNode;
   label: string;
@@ -94,16 +95,18 @@ const SidebarBody = ({
   analyticsId,
   settingsId,
   chatId,
+  leadsId,
   firstWebsiteId,
 }: {
   analyticsId: string | null;
   settingsId: string | null;
   chatId: string | null;
+  leadsId: string | null;
   firstWebsiteId: string | null;
 }) => {
   const { logout, user } = useAuth();
-  // For Analytics/Settings navigation fallback when on /chat/:id
-  const navFallbackId = analyticsId ?? chatId ?? firstWebsiteId;
+  // For Analytics/Settings/Leads navigation fallback when on /chat/:id
+  const navFallbackId = analyticsId ?? chatId ?? leadsId ?? firstWebsiteId;
 
   return (
     <div className="flex h-full flex-col">
@@ -139,6 +142,13 @@ const SidebarBody = ({
           activeId={settingsId}
           icon={<Settings2 className="h-4 w-4" />}
           label="Settings"
+          firstWebsiteId={navFallbackId}
+        />
+        <ProjectNavItem
+          section="leads"
+          activeId={leadsId}
+          icon={<Users className="h-4 w-4" />}
+          label="Leads"
           firstWebsiteId={navFallbackId}
         />
         <ProjectNavItem
@@ -183,21 +193,22 @@ type SidebarProps = {
   analyticsId: string | null;
   settingsId: string | null;
   chatId: string | null;
+  leadsId: string | null;
   firstWebsiteId: string | null;
 };
 
 // ── Desktop sidebar ────────────────────────────────────────────────────────
-const DesktopSidebar = ({ analyticsId, settingsId, chatId, firstWebsiteId }: SidebarProps) => (
+const DesktopSidebar = ({ analyticsId, settingsId, chatId, leadsId, firstWebsiteId }: SidebarProps) => (
   <aside
     style={{ width: tokens.widthExpanded }}
     className="fixed left-0 top-0 hidden h-screen border-r border-border/60 bg-background lg:flex flex-col z-40"
   >
-    <SidebarBody analyticsId={analyticsId} settingsId={settingsId} chatId={chatId} firstWebsiteId={firstWebsiteId} />
+    <SidebarBody analyticsId={analyticsId} settingsId={settingsId} chatId={chatId} leadsId={leadsId} firstWebsiteId={firstWebsiteId} />
   </aside>
 );
 
 // ── Mobile drawer ──────────────────────────────────────────────────────────
-const MobileDrawer = ({ analyticsId, settingsId, chatId, firstWebsiteId }: SidebarProps) => {
+const MobileDrawer = ({ analyticsId, settingsId, chatId, leadsId, firstWebsiteId }: SidebarProps) => {
   const { mobileOpen, setMobileOpen } = useSidebar();
 
   return (
@@ -227,7 +238,7 @@ const MobileDrawer = ({ analyticsId, settingsId, chatId, firstWebsiteId }: Sideb
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            <SidebarBody analyticsId={analyticsId} settingsId={settingsId} chatId={chatId} firstWebsiteId={firstWebsiteId} />
+            <SidebarBody analyticsId={analyticsId} settingsId={settingsId} chatId={chatId} leadsId={leadsId} firstWebsiteId={firstWebsiteId} />
           </motion.aside>
         </>
       )}
@@ -240,17 +251,19 @@ const Sidebar = () => {
   const analyticsMatch = useMatch('/analytics/:id');
   const settingsMatch  = useMatch('/settings/:id');
   const chatMatch      = useMatch('/chat/:id');
+  const leadsMatch     = useMatch('/leads/:id');
 
   const analyticsId = analyticsMatch?.params.id ?? null;
   const settingsId  = settingsMatch?.params.id ?? null;
   const chatId      = chatMatch?.params.id ?? null;
+  const leadsId     = leadsMatch?.params.id ?? null;
 
   const { firstWebsiteId } = useWebsites();
 
   return (
     <>
-      <DesktopSidebar analyticsId={analyticsId} settingsId={settingsId} chatId={chatId} firstWebsiteId={firstWebsiteId} />
-      <MobileDrawer   analyticsId={analyticsId} settingsId={settingsId} chatId={chatId} firstWebsiteId={firstWebsiteId} />
+      <DesktopSidebar analyticsId={analyticsId} settingsId={settingsId} chatId={chatId} leadsId={leadsId} firstWebsiteId={firstWebsiteId} />
+      <MobileDrawer   analyticsId={analyticsId} settingsId={settingsId} chatId={chatId} leadsId={leadsId} firstWebsiteId={firstWebsiteId} />
     </>
   );
 };
