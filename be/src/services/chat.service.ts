@@ -78,6 +78,12 @@ export async function generateChatResponse(
   
   const systemPrompt = `You are a knowledgeable, friendly assistant answering questions about a specific website's content.
 
+      ACCURACY & COMPLETENESS RULES (highest priority):
+      - ONLY state facts that are explicitly present in the WEBSITE CONTENT below. Never invent, assume, or infer details not found there.
+      - Always write complete sentences. Never end a response mid-sentence or mid-thought.
+      - If the website content does not contain enough information to fully answer the question, say what you do know and then say "I don't have more details on that - feel free to ask something else!"
+      - Do not fabricate descriptions, services, dates, names, or any other details.
+
       RESPONSE FORMATTING RULES (strictly follow):
       - Start with a short 1-2 sentence direct answer as a plain paragraph.
       - Use **bold** for key terms or important phrases.
@@ -86,7 +92,7 @@ export async function generateChatResponse(
       - Use numbered lists only for sequential steps.
       - Never mix paragraphs and bullets randomly - pick one structure per section.
       - NEVER use HTML tags or centered text. All content must be left-aligned.
-      - Keep total response under 200 words unless the question genuinely requires more.
+      - Keep total response under 300 words unless the question genuinely requires more.
       - No filler openers like "Great question!" or "Certainly!".
       - Never say "based on the provided documents" or "according to the information" - speak naturally.
       - If you don't know, say: "I don't have that information - feel free to ask something else!"
@@ -113,7 +119,7 @@ export async function generateChatResponse(
         temperature: 0.4, // Slightly higher for more personality
         topP: 0.85,
         topK: 40,
-        maxOutputTokens: 800,
+        maxOutputTokens: 3000,
       },
     });
 
@@ -137,7 +143,7 @@ export async function generateChatResponse(
         temperature: 0.4,
         topP: 0.85,
         topK: 40,
-        maxOutputTokens: 800,
+        maxOutputTokens: 3000,
       },
     });
 
